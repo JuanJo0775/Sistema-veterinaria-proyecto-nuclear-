@@ -1,10 +1,1312 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Clínica Veterinaria</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #D8F3DC;
+            color: #081C15;
+            line-height: 1.6;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2D6A4F 0%, #081C15 100%);
+            color: white;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            background: #52B788;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section-title {
+            padding: 0 20px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .menu-item {
+            list-style: none;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background: rgba(82, 183, 136, 0.2);
+            border-left-color: #52B788;
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(8, 28, 21, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #B7E4C7;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #2D6A4F;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2D6A4F;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-bell {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #2D6A4F;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            background: #B7E4C7;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #22577A;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #B7E4C7;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #2D6A4F;
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #52B788;
+        }
+
+        /* DASHBOARD CONTENT */
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(8, 28, 21, 0.08);
+            border-left: 4px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.primary { border-left-color: #52B788; }
+        .stat-card.secondary { border-left-color: #38A3A5; }
+        .stat-card.warning { border-left-color: #22577A; }
+        .stat-card.danger { border-left-color: #2D6A4F; }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: #52B788;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.primary { background: linear-gradient(135deg, #52B788, #38A3A5); }
+        .stat-icon.secondary { background: linear-gradient(135deg, #38A3A5, #22577A); }
+        .stat-icon.warning { background: linear-gradient(135deg, #22577A, #2D6A4F); }
+        .stat-icon.danger { background: linear-gradient(135deg, #2D6A4F, #081C15); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2D6A4F;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #52B788;
+            font-size: 0.9rem;
+        }
+
+        /* CHARTS AND TABLES SECTION */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card,
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(8, 28, 21, 0.08);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 25px 25px 0;
+            border-bottom: 1px solid #B7E4C7;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2D6A4F;
+            margin-bottom: 10px;
+        }
+
+        .card-subtitle {
+            color: #52B788;
+            font-size: 0.9rem;
+        }
+
+        .card-content {
+            padding: 0 25px 25px;
+        }
+
+        /* RECENT ACTIVITIES */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #D8F3DC;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.appointment { background: #52B788; }
+        .activity-icon.inventory { background: #38A3A5; }
+        .activity-icon.notification { background: #22577A; }
+        .activity-icon.user { background: #2D6A4F; }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #2D6A4F;
+            margin-bottom: 5px;
+        }
+
+        .activity-description {
+            color: #52B788;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .activity-time {
+            color: #B7E4C7;
+            font-size: 0.8rem;
+        }
+
+        /* QUICK ACTIONS */
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(8, 28, 21, 0.08);
+            padding: 25px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 15px;
+            background: linear-gradient(135deg, #D8F3DC 0%, #B7E4C7 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #2D6A4F;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(45, 106, 79, 0.15);
+            background: linear-gradient(135deg, #B7E4C7 0%, #52B788 100%);
+            color: white;
+        }
+
+        .action-icon {
+            font-size: 24px;
+        }
+
+        .action-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* LOADING STATE */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #52B788;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #D8F3DC;
+            border-top: 4px solid #52B788;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-content {
+                padding: 20px 15px;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        /* NOTIFICATION DROPDOWN */
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(8, 28, 21, 0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #D8F3DC;
+            font-weight: 600;
+            color: #2D6A4F;
+        }
+
+        .notification-list {
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #D8F3DC;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: #D8F3DC;
+        }
+
+        .notification-item.unread {
+            background: linear-gradient(90deg, rgba(82, 183, 136, 0.1) 0%, transparent 100%);
+            border-left: 3px solid #52B788;
+        }
+
+        .notification-text {
+            color: #2D6A4F;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            color: #52B788;
+            font-size: 0.8rem;
+        }
+
+        /* FLASHED MESSAGES */
+        .flashed-messages {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .alert-success {
+            background: #B7E4C7;
+            color: #2D6A4F;
+            border-left: 4px solid #52B788;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-left: 4px solid #ff9800;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #2196f3;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- FLASHED MESSAGES -->
+    <div class="flashed-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
 
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🐾</div>
+            <div class="sidebar-title">Panel Administrador</div>
+            <div class="sidebar-subtitle">Clínica Veterinaria</div>
+        </div>
+
+        <div class="sidebar-menu">
+            <!-- DASHBOARD -->
+            <div class="menu-section">
+                <div class="menu-section-title">Principal</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#dashboard" class="menu-link active" data-section="dashboard">
+                            <span class="menu-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- GESTIÓN DE USUARIOS -->
+            <div class="menu-section">
+                <div class="menu-section-title">Gestión de Personal</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#users" class="menu-link" data-section="users">
+                            <span class="menu-icon">👥</span>
+                            <span>Usuarios y Roles</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#schedules" class="menu-link" data-section="schedules">
+                            <span class="menu-icon">📅</span>
+                            <span>Horarios</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- GESTIÓN CLÍNICA -->
+            <div class="menu-section">
+                <div class="menu-section-title">Gestión Clínica</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#appointments" class="menu-link" data-section="appointments">
+                            <span class="menu-icon">📋</span>
+                            <span>Citas Médicas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#pets" class="menu-link" data-section="pets">
+                            <span class="menu-icon">🐕</span>
+                            <span>Mascotas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#medical-records" class="menu-link" data-section="medical-records">
+                            <span class="menu-icon">📄</span>
+                            <span>Historias Clínicas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#clients" class="menu-link" data-section="clients">
+                            <span class="menu-icon">👤</span>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- INVENTARIO -->
+            <div class="menu-section">
+                <div class="menu-section-title">Inventario</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#inventory" class="menu-link" data-section="inventory">
+                            <span class="menu-icon">📦</span>
+                            <span>Medicamentos</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#inventory-alerts" class="menu-link" data-section="inventory-alerts">
+                            <span class="menu-icon">⚠️</span>
+                            <span>Alertas de Stock</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#inventory-reports" class="menu-link" data-section="inventory-reports">
+                            <span class="menu-icon">📈</span>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- NOTIFICACIONES -->
+            <div class="menu-section">
+                <div class="menu-section-title">Comunicación</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#notifications" class="menu-link" data-section="notifications">
+                            <span class="menu-icon">🔔</span>
+                            <span>Notificaciones</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#messaging" class="menu-link" data-section="messaging">
+                            <span class="menu-icon">💬</span>
+                            <span>Mensajería</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- REPORTES -->
+            <div class="menu-section">
+                <div class="menu-section-title">Reportes</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#financial-reports" class="menu-link" data-section="financial-reports">
+                            <span class="menu-icon">💰</span>
+                            <span>Facturación</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#analytics" class="menu-link" data-section="analytics">
+                            <span class="menu-icon">📊</span>
+                            <span>Analíticas</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CONFIGURACIÓN -->
+            <div class="menu-section">
+                <div class="menu-section-title">Sistema</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#settings" class="menu-link" data-section="settings">
+                            <span class="menu-icon">⚙️</span>
+                            <span>Configuración</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('frontend.logout') }}" class="menu-link">
+                            <span class="menu-icon">🚪</span>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+
+            <div class="topbar-right">
+                <div style="position: relative;">
+                    <button class="notification-bell" id="notificationBell">
+                        🔔
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">Notificaciones</div>
+                        <ul class="notification-list" id="notificationList">
+                            <!-- Se llenarán dinámicamente -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="user-menu">
+                    <div class="user-avatar">{{ user_initial }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user_name }}</div>
+                        <div class="user-role">{{ user_role }}</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="dashboard-content" id="dashboardContent">
+            <!-- ESTADÍSTICAS PRINCIPALES -->
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-header">
+                        <div class="stat-title">Total Pacientes</div>
+                        <div class="stat-icon primary">🐕</div>
+                    </div>
+                    <div class="stat-value" id="totalPets">-</div>
+                    <div class="stat-label">Mascotas registradas</div>
+                </div>
+
+                <div class="stat-card secondary">
+                    <div class="stat-header">
+                        <div class="stat-title">Citas Hoy</div>
+                        <div class="stat-icon secondary">📅</div>
+                    </div>
+                    <div class="stat-value" id="appointmentsToday">{{ appointments_today|length }}</div>
+                    <div class="stat-label">Citas programadas</div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <div class="stat-title">Stock Bajo</div>
+                        <div class="stat-icon warning">⚠️</div>
+                    </div>
+                    <div class="stat-value" id="lowStockItems">{{ inventory_summary.low_stock_count or 0 }}</div>
+                    <div class="stat-label">Medicamentos</div>
+                </div>
+
+                <div class="stat-card danger">
+                    <div class="stat-header">
+                        <div class="stat-title">Valor Inventario</div>
+                        <div class="stat-icon danger">💰</div>
+                    </div>
+                    <div class="stat-value" id="inventoryValue">
+                        {% if inventory_summary.total_inventory_value %}
+                            ${{ "{:,.0f}".format(inventory_summary.total_inventory_value) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Total en stock</div>
+                </div>
+            </div>
+
+            <!-- CHARTS AND ACTIVITIES -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="card-header">
+                        <div class="card-title">Actividad del Sistema</div>
+                        <div class="card-subtitle">Resumen de actividades recientes</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="loading" id="chartLoading" style="display: none;">
+                            <div class="spinner"></div>
+                            Cargando datos...
+                        </div>
+                        <div style="text-align: center; padding: 40px; color: #52B788;">
+                            📊 Gráfico de actividades<br>
+                            <small>Próximamente disponible</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="card-header">
+                        <div class="card-title">Actividades Recientes</div>
+                        <div class="card-subtitle">Últimas acciones en el sistema</div>
+                    </div>
+                    <div class="card-content">
+                        <ul class="activity-list" id="activityList">
+                            <!-- Se llenarán dinámicamente por JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="quick-actions">
+                <div class="card-title">Acciones Rápidas</div>
+                <div class="actions-grid">
+                    <a href="#users" class="action-btn" data-section="users">
+                        <span class="action-icon">👥</span>
+                        <span class="action-label">Nuevo Usuario</span>
+                    </a>
+                    <a href="#appointments" class="action-btn" data-section="appointments">
+                        <span class="action-icon">📋</span>
+                        <span class="action-label">Nueva Cita</span>
+                    </a>
+                    <a href="#inventory" class="action-btn" data-section="inventory">
+                        <span class="action-icon">📦</span>
+                        <span class="action-label">Gestionar Stock</span>
+                    </a>
+                    <a href="#messaging" class="action-btn" data-section="messaging">
+                        <span class="action-icon">💬</span>
+                        <span class="action-label">Enviar Mensaje</span>
+                    </a>
+                    <a href="#financial-reports" class="action-btn" data-section="financial-reports">
+                        <span class="action-icon">💰</span>
+                        <span class="action-label">Ver Reportes</span>
+                    </a>
+                    <a href="#inventory-alerts" class="action-btn" data-section="inventory-alerts">
+                        <span class="action-icon">⚠️</span>
+                        <span class="action-label">Alertas</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // VARIABLES GLOBALES
+        let currentSection = 'dashboard';
+        let currentUser = null;
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando Panel de Administrador...');
+
+            setupEventListeners();
+            loadUserInfo(); // Cargar info del usuario primero
+            loadRecentActivities();
+
+            // Auto-remover mensajes flash después de 5 segundos
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    alert.style.animation = 'slideInRight 0.3s ease reverse';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+        });
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user-info');
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    console.log('👤 Usuario cargado:', currentUser);
+
+                    // Actualizar información del usuario en la UI
+                    updateUserUI();
+
+                    // Ahora cargar datos del dashboard
+                    loadDashboardData();
+                } else {
+                    console.error('❌ Error obteniendo info del usuario');
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('❌ Error cargando usuario:', error);
+                // No redirigir automáticamente, puede ser un error temporal
+                loadDashboardData(); // Intentar cargar dashboard anyway
+            }
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+
+            // Actualizar avatar y nombre solo si los elementos existen y no tienen contenido del servidor
+            const userAvatar = document.querySelector('.user-avatar');
+            const userName = document.querySelector('.user-name');
+            const userRole = document.querySelector('.user-role');
+
+            if (userAvatar && currentUser.first_name) {
+                // Solo actualizar si está vacío o tiene el valor por defecto
+                if (userAvatar.textContent.trim() === 'A' || userAvatar.textContent.trim() === '') {
+                    userAvatar.textContent = currentUser.first_name.charAt(0).toUpperCase();
+                }
+            }
+
+            if (userName && currentUser.first_name && currentUser.last_name) {
+                // Solo actualizar si tiene el valor por defecto
+                if (userName.textContent.trim() === 'Administrador') {
+                    userName.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+                }
+            }
+
+            if (userRole && currentUser.role) {
+                // Solo actualizar si tiene el valor por defecto
+                if (userRole.textContent.trim() === 'Admin') {
+                    userRole.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            // Menu toggle para móvil
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+
+            // Navegación del sidebar
+            const menuLinks = document.querySelectorAll('.menu-link[data-section]');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+
+            // Acciones rápidas
+            const actionBtns = document.querySelectorAll('.action-btn[data-section]');
+            actionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = btn.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+
+            // Notificaciones
+            const notificationBell = document.getElementById('notificationBell');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+
+            notificationBell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('active');
+                loadNotifications();
+            });
+
+            // Cerrar dropdown al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.remove('active');
+                }
+            });
+        }
+
+        function navigateToSection(section) {
+            // Actualizar navegación activa
+            document.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const activeLink = document.querySelector(`[data-section="${section}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            // Actualizar título de página
+            const pageTitles = {
+                'dashboard': 'Dashboard',
+                'users': 'Gestión de Usuarios',
+                'schedules': 'Horarios del Personal',
+                'appointments': 'Gestión de Citas',
+                'pets': 'Gestión de Mascotas',
+                'medical-records': 'Historias Clínicas',
+                'clients': 'Gestión de Clientes',
+                'inventory': 'Gestión de Inventario',
+                'inventory-alerts': 'Alertas de Inventario',
+                'inventory-reports': 'Reportes de Inventario',
+                'notifications': 'Centro de Notificaciones',
+                'messaging': 'Sistema de Mensajería',
+                'financial-reports': 'Reportes Financieros',
+                'analytics': 'Analíticas y Métricas',
+                'settings': 'Configuración del Sistema'
+            };
+
+            document.getElementById('pageTitle').textContent = pageTitles[section] || 'Dashboard';
+
+            // Cargar contenido de la sección
+            loadSectionContent(section);
+            currentSection = section;
+
+            // Cerrar sidebar en móvil
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard-data');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateDashboardStats(result.data);
+                } else {
+                    console.error('❌ Error en dashboard data:', result.message);
+                }
+
+            } catch (error) {
+                console.error('❌ Error cargando datos del dashboard:', error);
+            }
+        }
+
+        function updateDashboardStats(data) {
+            // Actualizar solo si los elementos existen y los datos son diferentes
+            if (data.total_pets !== undefined) {
+                document.getElementById('totalPets').textContent = data.total_pets;
+            }
+
+            if (data.appointments_today !== undefined) {
+                document.getElementById('appointmentsToday').textContent = data.appointments_today;
+            }
+
+            if (data.low_stock_count !== undefined) {
+                document.getElementById('lowStockItems').textContent = data.low_stock_count;
+            }
+
+            if (data.inventory_value !== undefined) {
+                document.getElementById('inventoryValue').textContent = formatCurrency(data.inventory_value);
+            }
+
+            // Actualizar badge de notificaciones
+            const notificationBadge = document.getElementById('notificationBadge');
+            const notificationsCount = data.notifications_count || 0;
+
+            if (notificationsCount > 0) {
+                notificationBadge.textContent = notificationsCount;
+                notificationBadge.style.display = 'flex';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        function loadRecentActivities() {
+            const activityList = document.getElementById('activityList');
+
+            // Datos de ejemplo basados en datos reales
+            const activities = [
+                {
+                    type: 'appointment',
+                    title: 'Citas programadas hoy',
+                    description: `{{ appointments_today|length }} citas en agenda`,
+                    time: 'Actualizado ahora',
+                    icon: '📅'
+                },
+                {
+                    type: 'inventory',
+                    title: 'Estado del inventario',
+                    description: `{{ inventory_summary.low_stock_count or 0 }} medicamentos con stock bajo`,
+                    time: 'Hace 5 minutos',
+                    icon: '📦'
+                },
+                {
+                    type: 'user',
+                    title: 'Sistema activo',
+                    description: 'Panel de administrador accedido',
+                    time: 'Hace 1 minuto',
+                    icon: '👤'
+                }
+            ];
+
+            activityList.innerHTML = activities.map(activity => `
+                <li class="activity-item">
+                    <div class="activity-icon ${activity.type}">
+                        ${activity.icon}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-description">${activity.description}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function loadNotifications() {
+            const notificationList = document.getElementById('notificationList');
+
+            // Ejemplo de notificaciones
+            const notifications = [
+                {
+                    id: '1',
+                    message: 'Stock bajo detectado en medicamentos',
+                    time: 'Hace 30 min',
+                    unread: true
+                },
+                {
+                    id: '2',
+                    message: 'Nueva cita programada para mañana',
+                    time: 'Hace 1 hora',
+                    unread: true
+                }
+            ];
+
+            if (notifications.length === 0) {
+                notificationList.innerHTML = `
+                    <li class="notification-item">
+                        <div class="notification-text">No hay notificaciones nuevas</div>
+                    </li>
+                `;
+                return;
+            }
+
+            notificationList.innerHTML = notifications.map(notification => `
+                <li class="notification-item ${notification.unread ? 'unread' : ''}"
+                    onclick="markNotificationAsRead('${notification.id}')">
+                    <div class="notification-text">${notification.message}</div>
+                    <div class="notification-time">${notification.time}</div>
+                </li>
+            `).join('');
+        }
+
+        function markNotificationAsRead(notificationId) {
+            console.log('Marcando notificación como leída:', notificationId);
+            // Implementar lógica de marcar como leída
+        }
+
+        function loadSectionContent(section) {
+            const content = document.getElementById('dashboardContent');
+
+            // Mostrar loading
+            content.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Cargando ${section}...
+                </div>
+            `;
+
+            // Simular carga de contenido
+            setTimeout(() => {
+                if (section === 'dashboard') {
+                    location.reload();
+                    return;
+                }
+
+                const sectionNames = {
+                    'users': '👥 Gestión de Usuarios',
+                    'schedules': '📅 Gestión de Horarios',
+                    'appointments': '📋 Gestión de Citas',
+                    'pets': '🐕 Gestión de Mascotas',
+                    'medical-records': '📄 Historias Clínicas',
+                    'clients': '👤 Gestión de Clientes',
+                    'inventory': '📦 Gestión de Inventario',
+                    'inventory-alerts': '⚠️ Alertas de Inventario',
+                    'inventory-reports': '📈 Reportes de Inventario',
+                    'notifications': '🔔 Centro de Notificaciones',
+                    'messaging': '💬 Sistema de Mensajería',
+                    'financial-reports': '💰 Reportes Financieros',
+                    'analytics': '📊 Analíticas y Métricas',
+                    'settings': '⚙️ Configuración del Sistema'
+                };
+
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <h2 style="color: #2D6A4F; margin-bottom: 20px;">${sectionNames[section] || 'Sección'}</h2>
+                        <p style="color: #52B788; font-size: 1.1rem;">Sección en desarrollo...</p>
+                        <p style="color: #52B788;">Esta funcionalidad estará disponible próximamente.</p>
+                        <div style="margin-top: 30px;">
+                            <button onclick="navigateToSection('dashboard')"
+                                    style="background: #52B788; color: white; border: none;
+                                           padding: 12px 24px; border-radius: 8px; cursor: pointer;">
+                                Volver al Dashboard
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        }
+
+        // UTILIDADES
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+            if (diffInMinutes < 1) return 'Ahora';
+            if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
+
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) return `Hace ${diffInHours}h`;
+
+            const diffInDays = Math.floor(diffInHours / 24);
+            return `Hace ${diffInDays}d`;
+        }
+
+        // MANEJO DE ERRORES GLOBAL
+        window.addEventListener('error', (e) => {
+            console.error('❌ Error global:', e.error);
+        });
+    </script>
 </body>
 </html>

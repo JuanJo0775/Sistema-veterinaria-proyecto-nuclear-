@@ -1,0 +1,803 @@
+<!-- frontend/app/templates/admin/sections/users-management.html -->
+<div class="users-management-section">
+    <!-- HEADER DE LA SECCIÓN -->
+    <div class="section-header">
+        <div class="section-title-area">
+            <h2 class="section-title">
+                <span class="section-icon">👥</span>
+                Gestión de Usuarios y Roles
+            </h2>
+            <p class="section-subtitle">Administra usuarios, roles y permisos del sistema</p>
+        </div>
+        <div class="section-actions">
+            <button class="btn btn-primary" id="btnNewUser">
+                <span class="btn-icon">➕</span>
+                Nuevo Usuario
+            </button>
+            <button class="btn btn-secondary" id="btnExportUsers">
+                <span class="btn-icon">📊</span>
+                Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTROS Y BÚSQUEDA -->
+    <div class="filters-panel">
+        <div class="search-box">
+            <input type="text" id="searchUsers" placeholder="Buscar por nombre, email o rol..." class="search-input">
+            <span class="search-icon">🔍</span>
+        </div>
+        <div class="filter-controls">
+            <select id="filterRole" class="filter-select">
+                <option value="">Todos los roles</option>
+                <option value="admin">Administrador</option>
+                <option value="veterinarian">Veterinario</option>
+                <option value="receptionist">Recepcionista</option>
+                <option value="auxiliary">Auxiliar</option>
+                <option value="client">Cliente</option>
+            </select>
+            <select id="filterStatus" class="filter-select">
+                <option value="">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+            </select>
+            <button class="btn btn-outline" id="btnClearFilters">Limpiar Filtros</button>
+        </div>
+    </div>
+
+    <!-- ESTADÍSTICAS RÁPIDAS -->
+    <div class="users-stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalUsers">-</div>
+                <div class="stat-label">Total Usuarios</div>
+            </div>
+        </div>
+        <div class="stat-card secondary">
+            <div class="stat-icon">👨‍⚕️</div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalVeterinarians">-</div>
+                <div class="stat-label">Veterinarios</div>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-icon">👤</div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalClients">-</div>
+                <div class="stat-label">Clientes</div>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+                <div class="stat-value" id="activeUsers">-</div>
+                <div class="stat-label">Usuarios Activos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA DE USUARIOS -->
+    <div class="users-table-container">
+        <div class="table-header">
+            <h3>Lista de Usuarios</h3>
+            <div class="table-info">
+                <span id="usersCount">0 usuarios encontrados</span>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="name">
+                            Nombre
+                            <span class="sort-icon">↕️</span>
+                        </th>
+                        <th class="sortable" data-sort="email">
+                            Email
+                            <span class="sort-icon">↕️</span>
+                        </th>
+                        <th class="sortable" data-sort="role">
+                            Rol
+                            <span class="sort-icon">↕️</span>
+                        </th>
+                        <th>Teléfono</th>
+                        <th class="sortable" data-sort="created_at">
+                            Fecha Registro
+                            <span class="sort-icon">↕️</span>
+                        </th>
+                        <th class="sortable" data-sort="is_active">
+                            Estado
+                            <span class="sort-icon">↕️</span>
+                        </th>
+                        <th class="actions-column">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Se llenará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div class="table-loading" id="usersTableLoading">
+            <div class="spinner"></div>
+            <span>Cargando usuarios...</span>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div class="table-empty" id="usersTableEmpty" style="display: none;">
+            <div class="empty-icon">👥</div>
+            <h3>No se encontraron usuarios</h3>
+            <p>No hay usuarios que coincidan con los filtros aplicados.</p>
+            <button class="btn btn-primary" onclick="clearFilters()">Ver todos los usuarios</button>
+        </div>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-container" id="usersPagination">
+        <!-- Se generará dinámicamente -->
+    </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR USUARIO -->
+<div class="modal-overlay" id="userModalOverlay">
+    <div class="modal" id="userModal">
+        <div class="modal-header">
+            <h3 id="userModalTitle">Nuevo Usuario</h3>
+            <button class="modal-close" id="closeUserModal">✕</button>
+        </div>
+
+        <form id="userForm" class="modal-body">
+            <div class="form-grid">
+                <!-- INFORMACIÓN PERSONAL -->
+                <div class="form-section">
+                    <h4 class="form-section-title">
+                        <span class="section-icon">👤</span>
+                        Información Personal
+                    </h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Nombre *</label>
+                            <input type="text" id="firstName" name="first_name" required
+                                   placeholder="Nombre del usuario" maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Apellido *</label>
+                            <input type="text" id="lastName" name="last_name" required
+                                   placeholder="Apellido del usuario" maxlength="50">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userEmail">Email *</label>
+                        <input type="email" id="userEmail" name="email" required
+                               placeholder="usuario@email.com">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userPhone">Teléfono</label>
+                            <input type="tel" id="userPhone" name="phone"
+                                   placeholder="+57 300 123 4567" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Rol *</label>
+                            <select id="userRole" name="role" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="admin">👑 Administrador</option>
+                                <option value="veterinarian">👨‍⚕️ Veterinario</option>
+                                <option value="receptionist">👩‍💼 Recepcionista</option>
+                                <option value="auxiliary">👩‍🔬 Auxiliar</option>
+                                <option value="client">👤 Cliente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userAddress">Dirección</label>
+                        <textarea id="userAddress" name="address" rows="3"
+                                  placeholder="Dirección completa (opcional)"></textarea>
+                    </div>
+                </div>
+
+                <!-- CREDENCIALES -->
+                <div class="form-section" id="passwordSection">
+                    <h4 class="form-section-title">
+                        <span class="section-icon">🔐</span>
+                        Credenciales de Acceso
+                    </h4>
+
+                    <div class="form-group">
+                        <label for="userPassword">Contraseña *</label>
+                        <div class="password-input-group">
+                            <input type="password" id="userPassword" name="password"
+                                   placeholder="Mínimo 6 caracteres" minlength="6">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('userPassword')">👁️</button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar Contraseña *</label>
+                        <div class="password-input-group">
+                            <input type="password" id="confirmPassword" name="confirm_password"
+                                   placeholder="Repetir contraseña">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword')">👁️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIGURACIÓN ADICIONAL -->
+                <div class="form-section">
+                    <h4 class="form-section-title">
+                        <span class="section-icon">⚙️</span>
+                        Configuración
+                    </h4>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="userActive" name="is_active" checked>
+                            <label for="userActive">Usuario activo</label>
+                        </div>
+                        <small class="form-help">Los usuarios inactivos no pueden iniciar sesión</small>
+                    </div>
+
+                    <!-- PERMISOS ESPECIALES (Solo para roles específicos) -->
+                    <div class="permissions-section" id="permissionsSection" style="display: none;">
+                        <label>Permisos Especiales</label>
+                        <div class="permissions-grid">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="canManageInventory" name="can_manage_inventory">
+                                <label for="canManageInventory">📦 Gestionar Inventario</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="canViewReports" name="can_view_reports">
+                                <label for="canViewReports">📊 Ver Reportes</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="canSendMessages" name="can_send_messages">
+                                <label for="canSendMessages">💬 Enviar Mensajes</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="canManageSchedules" name="can_manage_schedules">
+                                <label for="canManageSchedules">📅 Gestionar Horarios</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMACIÓN DEL ROL -->
+                    <div class="role-info" id="roleInfo" style="display: none;">
+                        <div class="role-description">
+                            <strong>Descripción del rol:</strong>
+                            <p id="roleDescription"></p>
+                        </div>
+                        <div class="role-permissions">
+                            <strong>Permisos por defecto:</strong>
+                            <ul id="rolePermissionsList"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelUserForm">Cancelar</button>
+            <button type="submit" form="userForm" class="btn btn-primary" id="saveUserBtn">
+                <span class="btn-text">Guardar Usuario</span>
+                <span class="btn-loading" style="display: none;">
+                    <span class="spinner-small"></span>
+                    Guardando...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN ELIMINAR/ACTIVAR -->
+<div class="modal-overlay" id="deleteUserModalOverlay">
+    <div class="modal modal-small">
+        <div class="modal-header">
+            <h3>Confirmar Acción</h3>
+            <button class="modal-close" onclick="closeDeleteUserModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-confirmation">
+                <div class="delete-icon">⚠️</div>
+                <h4 id="confirmActionTitle">¿Desactivar usuario?</h4>
+                <p id="deleteUserMessage">Esta acción desactivará el usuario y no podrá iniciar sesión.</p>
+                <div class="user-info" id="deleteUserInfo">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteUserModal()">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteUser">
+                <span class="btn-text">Desactivar</span>
+                <span class="btn-loading" style="display: none;">
+                    <span class="spinner-small"></span>
+                    Procesando...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLES DEL USUARIO -->
+<div class="modal-overlay" id="userDetailsModalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Detalles del Usuario</h3>
+            <button class="modal-close" onclick="closeUserDetailsModal()">✕</button>
+        </div>
+        <div class="modal-body" id="userDetailsContent">
+            <!-- Se llenará dinámicamente -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeUserDetailsModal()">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="editUserFromDetails">
+                ✏️ Editar Usuario
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ESTILOS PARA GESTIÓN DE USUARIOS */
+.users-management-section {
+    padding: 0;
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* HEADER DE SECCIÓN */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.section-title-area {
+    flex: 1;
+    min-width: 300px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2D6A4F;
+    margin-bottom: 8px;
+}
+
+.section-icon {
+    font-size: 2.2rem;
+}
+
+.section-subtitle {
+    color: #52B788;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* BOTONES MEJORADOS */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.9rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(82, 183, 136, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(82, 183, 136, 0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #B7E4C7 0%, #D8F3DC 100%);
+    color: #2D6A4F;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: #52B788;
+    border: 2px solid #52B788;
+}
+
+.btn-outline:hover {
+    background: #52B788;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.btn-icon {
+    font-size: 1rem;
+}
+
+/* PANEL DE FILTROS MEJORADO */
+.filters-panel {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
+    border: 1px solid #D8F3DC;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border: 2px solid #D8F3DC;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #F8FBF9;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #52B788;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #52B788;
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 12px 15px;
+    border: 2px solid #D8F3DC;
+    border-radius: 8px;
+    background: #F8FBF9;
+    color: #2D6A4F;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #52B788;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
+}
+
+/* ESTADÍSTICAS DE USUARIOS MEJORADAS */
+.users-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid #D8F3DC;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #52B788, #38A3A5);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(8, 28, 21, 0.12);
+}
+
+.stat-card.primary::before { background: linear-gradient(135deg, #52B788, #38A3A5); }
+.stat-card.secondary::before { background: linear-gradient(135deg, #38A3A5, #22577A); }
+.stat-card.warning::before { background: linear-gradient(135deg, #22577A, #2D6A4F); }
+.stat-card.info::before { background: linear-gradient(135deg, #2D6A4F, #081C15); }
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #52B788, #38A3A5);
+}
+
+.stat-card.primary .stat-icon { background: linear-gradient(135deg, #52B788, #38A3A5); }
+.stat-card.secondary .stat-icon { background: linear-gradient(135deg, #38A3A5, #22577A); }
+.stat-card.warning .stat-icon { background: linear-gradient(135deg, #22577A, #2D6A4F); }
+.stat-card.info .stat-icon { background: linear-gradient(135deg, #2D6A4F, #081C15); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #2D6A4F;
+    margin-bottom: 5px;
+    line-height: 1;
+}
+
+.stat-label {
+    color: #52B788;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* TABLA DE USUARIOS MEJORADA */
+.users-table-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
+    overflow: hidden;
+    margin-bottom: 25px;
+    border: 1px solid #D8F3DC;
+}
+
+.table-header {
+    padding: 25px;
+    border-bottom: 1px solid #D8F3DC;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: linear-gradient(135deg, #F8FBF9 0%, #F0F8F0 100%);
+}
+
+.table-header h3 {
+    color: #2D6A4F;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-header h3::before {
+    content: '📋';
+    font-size: 1.2rem;
+}
+
+.table-info {
+    color: #52B788;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    background: #D8F3DC;
+    padding: 18px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #2D6A4F;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 2px solid #B7E4C7;
+}
+
+.users-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.users-table th.sortable:hover {
+    background: #B7E4C7;
+    color: #081C15;
+}
+
+.sort-icon {
+    margin-left: 8px;
+    opacity: 0.6;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.users-table th.sortable.asc .sort-icon {
+    opacity: 1;
+    color: #52B788;
+}
+
+.users-table th.sortable.desc .sort-icon {
+    opacity: 1;
+    color: #52B788;
+    transform: rotate(180deg);
+}
+
+.users-table td {
+    padding: 18px 20px;
+    border-bottom: 1px solid #D8F3DC;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.users-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+    background: rgba(183, 228, 199, 0.15);
+    transform: scale(1.005);
+}
+
+.user-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-table {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #52B788, #38A3A5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* BADGES MEJORADOS */
+.role-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.role-badge.admin {
+    background: linear-gradient(135deg, #2D6A4F, #081C15);
+    color: white;
+    border-color: #2D6A4F;
+}
+.role-badge.veterinarian {
+    background: linear-gradient(135deg, #52B788, #38A3A5);
+    color: white;
+    border-color: #52B788;
+}
+.role-badge.receptionist {
+    background: linear-gradient(135deg, #38A3A5, #22577A);
+    color: white;
+    border-color: #38A3A5;
+}
+.role-badge.auxiliary {
+    background: linear-gradient(135deg, #22577A, #2D6A4F);
+    color: white;
+    border-color: #22577A;
+}
+.role-badge.client {
+    background: linear-gradient(135deg, #B7E4C7, #D8F3DC);
+    color: #2D6A4F;
+    border-color: #B7E4C7;
+}
+
+.status-badge.active {
+    background: linear-gradient(135deg, #d4edda, #c3e

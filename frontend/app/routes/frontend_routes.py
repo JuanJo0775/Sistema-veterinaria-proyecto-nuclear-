@@ -1,9 +1,9 @@
-# frontend/app/routes/frontend_routes.py
+# frontend/app/routes/frontend_routes.py - VERSIÓN ARREGLADA
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from functools import wraps
 import requests
 
-frontend_bp = Blueprint('frontend', __name__ )
+frontend_bp = Blueprint('frontend', __name__)
 
 
 def login_required(f):
@@ -70,7 +70,13 @@ def login():
                     # Guardar datos del usuario en la sesión
                     session['user'] = data['user']
                     session['token'] = data['token']
+                    session.permanent = True  # Hacer la sesión permanente
+
                     flash('¡Bienvenido!', 'success')
+
+                    # Debug: verificar qué se guardó en la sesión
+                    print(f"🔐 Usuario logueado: {data['user']}")
+
                     return redirect(url_for('frontend.dashboard'))
                 else:
                     flash(data.get('message', 'Error al iniciar sesión'), 'error')
@@ -78,6 +84,7 @@ def login():
                 flash('Credenciales inválidas', 'error')
 
         except requests.RequestException as e:
+            print(f"❌ Error de conexión: {e}")
             flash('Error de conexión con el servidor', 'error')
 
     return render_template('auth/login.html')
@@ -129,6 +136,8 @@ def logout():
 def dashboard():
     """Dashboard principal - redirige según el rol"""
     user_role = session['user'].get('role')
+
+    print(f"🔄 Dashboard redirect para rol: {user_role}")
 
     if user_role == 'client':
         return redirect(url_for('frontend.client_dashboard'))
@@ -259,6 +268,9 @@ def admin_dashboard():
     try:
         headers = {'Authorization': f"Bearer {session.get('token')}"}
 
+        print(f"🔐 Admin dashboard - Usuario: {session.get('user')}")
+        print(f"🔐 Token: {session.get('token')[:50]}..." if session.get('token') else "No token")
+
         # Obtener resumen del inventario
         inventory_url = f"{current_app.config['INVENTORY_SERVICE_URL']}/inventory/summary"
         inventory_response = requests.get(inventory_url, headers=headers, timeout=10)
@@ -279,13 +291,86 @@ def admin_dashboard():
 
         return render_template('admin/dashboard.html',
                                inventory_summary=inventory_summary,
-                               appointments_today=appointments_today)
+                               appointments_today=appointments_today,
+                               user=session.get('user'))
 
     except requests.RequestException as e:
+        print(f"❌ Error en admin dashboard: {e}")
         flash('Error al cargar el dashboard', 'error')
         return render_template('admin/dashboard.html',
                                inventory_summary={},
-                               appointments_today=[])
+                               appointments_today=[],
+                               user=session.get('user'))
+
+
+# =============== API ENDPOINTS PARA AJAX ===============
+
+@frontend_bp.route('/api/user-info')
+@login_required
+def user_info():
+    """Información del usuario actual"""
+    return jsonify({
+        'success': True,
+        'user': session['user']
+    })
+
+
+@frontend_bp.route('/api/dashboard-data')
+@login_required
+def dashboard_data():
+    """Datos para el dashboard (AJAX)"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+        user_id = session['user']['id']
+
+        # Datos del inventario
+        inventory_url = f"{current_app.config['INVENTORY_SERVICE_URL']}/inventory/summary"
+        inventory_response = requests.get(inventory_url, headers=headers, timeout=5)
+        inventory_data = {}
+        if inventory_response.status_code == 200:
+            inv_json = inventory_response.json()
+            if inv_json.get('success'):
+                inventory_data = inv_json.get('summary', {})
+
+        # Citas de hoy
+        appointments_url = f"{current_app.config['APPOINTMENT_SERVICE_URL']}/appointments/today"
+        appointments_response = requests.get(appointments_url, headers=headers, timeout=5)
+        appointments_count = 0
+        if appointments_response.status_code == 200:
+            app_json = appointments_response.json()
+            if app_json.get('success'):
+                appointments_count = len(app_json.get('appointments', []))
+
+        # Notificaciones (sin llamar si es null)
+        notifications_count = 0
+        if user_id and user_id != 'null':
+            try:
+                notifications_url = f"{current_app.config['NOTIFICATION_SERVICE_URL']}/notifications/user/{user_id}?unread_only=true"
+                notifications_response = requests.get(notifications_url, headers=headers, timeout=5)
+                if notifications_response.status_code == 200:
+                    notif_json = notifications_response.json()
+                    if notif_json.get('success'):
+                        notifications_count = len(notif_json.get('notifications', []))
+            except:
+                pass  # Si falla, dejar en 0
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_pets': 0,  # Implementar endpoint para mascotas totales
+                'appointments_today': appointments_count,
+                'low_stock_count': inventory_data.get('low_stock_count', 0),
+                'inventory_value': inventory_data.get('total_inventory_value', 0),
+                'notifications_count': notifications_count
+            }
+        })
+
+    except Exception as e:
+        print(f"❌ Error obteniendo datos del dashboard: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 
 # =============== RUTAS DE GESTIÓN ===============
@@ -316,18 +401,6 @@ def inventory():
 def medical_records():
     """Historias clínicas"""
     return render_template('medical/list.html')
-
-
-# =============== API ENDPOINTS PARA AJAX ===============
-
-@frontend_bp.route('/api/user-info')
-@login_required
-def user_info():
-    """Información del usuario actual"""
-    return jsonify({
-        'success': True,
-        'user': session['user']
-    })
 
 
 @frontend_bp.route('/health')
