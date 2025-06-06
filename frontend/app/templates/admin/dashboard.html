@@ -500,63 +500,6 @@
             }
         }
 
-        /* NOTIFICATION DROPDOWN */
-        .notification-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 350px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(8, 28, 21, 0.15);
-            display: none;
-            z-index: 1000;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-header {
-            padding: 20px;
-            border-bottom: 1px solid #D8F3DC;
-            font-weight: 600;
-            color: #2D6A4F;
-        }
-
-        .notification-list {
-            list-style: none;
-        }
-
-        .notification-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #D8F3DC;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .notification-item:hover {
-            background: #D8F3DC;
-        }
-
-        .notification-item.unread {
-            background: linear-gradient(90deg, rgba(82, 183, 136, 0.1) 0%, transparent 100%);
-            border-left: 3px solid #52B788;
-        }
-
-        .notification-text {
-            color: #2D6A4F;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .notification-time {
-            color: #52B788;
-            font-size: 0.8rem;
-        }
-
         /* FLASHED MESSAGES */
         .flashed-messages {
             position: fixed;
@@ -638,7 +581,7 @@
                 <div class="menu-section-title">Principal</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#dashboard" class="menu-link active" data-section="dashboard">
+                        <a href="{{ url_for('frontend.admin_dashboard') }}" class="menu-link active">
                             <span class="menu-icon">📊</span>
                             <span>Dashboard</span>
                         </a>
@@ -651,13 +594,13 @@
                 <div class="menu-section-title">Gestión de Personal</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#users" class="menu-link" data-section="users">
+                        <a href="{{ url_for('frontend.admin_users') }}" class="menu-link">
                             <span class="menu-icon">👥</span>
                             <span>Usuarios y Roles</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#schedules" class="menu-link" data-section="schedules">
+                        <a href="#schedules" class="menu-link">
                             <span class="menu-icon">📅</span>
                             <span>Horarios</span>
                         </a>
@@ -670,25 +613,25 @@
                 <div class="menu-section-title">Gestión Clínica</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#appointments" class="menu-link" data-section="appointments">
+                        <a href="{{ url_for('frontend.admin_appointments') }}" class="menu-link">
                             <span class="menu-icon">📋</span>
                             <span>Citas Médicas</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#pets" class="menu-link" data-section="pets">
+                        <a href="#pets" class="menu-link">
                             <span class="menu-icon">🐕</span>
                             <span>Mascotas</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#medical-records" class="menu-link" data-section="medical-records">
+                        <a href="#medical-records" class="menu-link">
                             <span class="menu-icon">📄</span>
                             <span>Historias Clínicas</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#clients" class="menu-link" data-section="clients">
+                        <a href="#clients" class="menu-link">
                             <span class="menu-icon">👤</span>
                             <span>Clientes</span>
                         </a>
@@ -701,19 +644,19 @@
                 <div class="menu-section-title">Inventario</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#inventory" class="menu-link" data-section="inventory">
+                        <a href="{{ url_for('frontend.admin_inventory') }}" class="menu-link">
                             <span class="menu-icon">📦</span>
                             <span>Medicamentos</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#inventory-alerts" class="menu-link" data-section="inventory-alerts">
+                        <a href="#inventory-alerts" class="menu-link">
                             <span class="menu-icon">⚠️</span>
                             <span>Alertas de Stock</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#inventory-reports" class="menu-link" data-section="inventory-reports">
+                        <a href="#inventory-reports" class="menu-link">
                             <span class="menu-icon">📈</span>
                             <span>Reportes</span>
                         </a>
@@ -726,13 +669,13 @@
                 <div class="menu-section-title">Comunicación</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#notifications" class="menu-link" data-section="notifications">
+                        <a href="#notifications" class="menu-link">
                             <span class="menu-icon">🔔</span>
                             <span>Notificaciones</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#messaging" class="menu-link" data-section="messaging">
+                        <a href="#messaging" class="menu-link">
                             <span class="menu-icon">💬</span>
                             <span>Mensajería</span>
                         </a>
@@ -745,13 +688,13 @@
                 <div class="menu-section-title">Reportes</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#financial-reports" class="menu-link" data-section="financial-reports">
+                        <a href="#financial-reports" class="menu-link">
                             <span class="menu-icon">💰</span>
                             <span>Facturación</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#analytics" class="menu-link" data-section="analytics">
+                        <a href="#analytics" class="menu-link">
                             <span class="menu-icon">📊</span>
                             <span>Analíticas</span>
                         </a>
@@ -764,7 +707,7 @@
                 <div class="menu-section-title">Sistema</div>
                 <ul>
                     <li class="menu-item">
-                        <a href="#settings" class="menu-link" data-section="settings">
+                        <a href="#settings" class="menu-link">
                             <span class="menu-icon">⚙️</span>
                             <span>Configuración</span>
                         </a>
@@ -786,7 +729,7 @@
         <header class="topbar">
             <div class="topbar-left">
                 <button class="menu-toggle" id="menuToggle">☰</button>
-                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                <h1 class="page-title">Dashboard</h1>
             </div>
 
             <div class="topbar-right">
@@ -795,12 +738,6 @@
                         🔔
                         <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                     </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header">Notificaciones</div>
-                        <ul class="notification-list" id="notificationList">
-                            <!-- Se llenarán dinámicamente -->
-                        </ul>
-                    </div>
                 </div>
 
                 <div class="user-menu">
@@ -868,10 +805,6 @@
                         <div class="card-subtitle">Resumen de actividades recientes</div>
                     </div>
                     <div class="card-content">
-                        <div class="loading" id="chartLoading" style="display: none;">
-                            <div class="spinner"></div>
-                            Cargando datos...
-                        </div>
                         <div style="text-align: center; padding: 40px; color: #52B788;">
                             📊 Gráfico de actividades<br>
                             <small>Próximamente disponible</small>
@@ -885,8 +818,31 @@
                         <div class="card-subtitle">Últimas acciones en el sistema</div>
                     </div>
                     <div class="card-content">
-                        <ul class="activity-list" id="activityList">
-                            <!-- Se llenarán dinámicamente por JavaScript -->
+                        <ul class="activity-list">
+                            <li class="activity-item">
+                                <div class="activity-icon appointment">📅</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Citas programadas hoy</div>
+                                    <div class="activity-description">{{ appointments_today|length }} citas en agenda</div>
+                                    <div class="activity-time">Actualizado ahora</div>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-icon inventory">📦</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Estado del inventario</div>
+                                    <div class="activity-description">{{ inventory_summary.low_stock_count or 0 }} medicamentos con stock bajo</div>
+                                    <div class="activity-time">Hace 5 minutos</div>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-icon user">👤</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Sistema activo</div>
+                                    <div class="activity-description">Panel de administrador accedido</div>
+                                    <div class="activity-time">Hace 1 minuto</div>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -896,29 +852,29 @@
             <div class="quick-actions">
                 <div class="card-title">Acciones Rápidas</div>
                 <div class="actions-grid">
-                    <a href="#users" class="action-btn" data-section="users">
+                    <a href="{{ url_for('frontend.admin_users') }}" class="action-btn">
                         <span class="action-icon">👥</span>
-                        <span class="action-label">Nuevo Usuario</span>
+                        <span class="action-label">Gestionar Usuarios</span>
                     </a>
-                    <a href="#appointments" class="action-btn" data-section="appointments">
+                    <a href="{{ url_for('frontend.admin_appointments') }}" class="action-btn">
                         <span class="action-icon">📋</span>
-                        <span class="action-label">Nueva Cita</span>
+                        <span class="action-label">Ver Citas</span>
                     </a>
-                    <a href="#inventory" class="action-btn" data-section="inventory">
+                    <a href="{{ url_for('frontend.admin_inventory') }}" class="action-btn">
                         <span class="action-icon">📦</span>
                         <span class="action-label">Gestionar Stock</span>
                     </a>
-                    <a href="#messaging" class="action-btn" data-section="messaging">
+                    <a href="#messaging" class="action-btn">
                         <span class="action-icon">💬</span>
                         <span class="action-label">Enviar Mensaje</span>
                     </a>
-                    <a href="#financial-reports" class="action-btn" data-section="financial-reports">
+                    <a href="#financial-reports" class="action-btn">
                         <span class="action-icon">💰</span>
                         <span class="action-label">Ver Reportes</span>
                     </a>
-                    <a href="#inventory-alerts" class="action-btn" data-section="inventory-alerts">
+                    <a href="#inventory-alerts" class="action-btn">
                         <span class="action-icon">⚠️</span>
-                        <span class="action-label">Alertas</span>
+                        <span class="action-label">Ver Alertas</span>
                     </a>
                 </div>
             </div>
@@ -926,17 +882,22 @@
     </main>
 
     <script>
-        // VARIABLES GLOBALES
-        let currentSection = 'dashboard';
-        let currentUser = null;
-
-        // INICIALIZACIÓN
+        // INICIALIZACIÓN SIMPLE
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Inicializando Panel de Administrador...');
+            console.log('🚀 Dashboard Admin cargado correctamente');
 
-            setupEventListeners();
-            loadUserInfo(); // Cargar info del usuario primero
-            loadRecentActivities();
+            // Setup del menu toggle para móvil
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Cargar datos actualizados del dashboard
+            loadDashboardData();
 
             // Auto-remover mensajes flash después de 5 segundos
             setTimeout(() => {
@@ -948,173 +909,7 @@
             }, 5000);
         });
 
-        async function loadUserInfo() {
-            try {
-                const response = await fetch('/api/user-info');
-                const data = await response.json();
-
-                if (data.success) {
-                    currentUser = data.user;
-                    console.log('👤 Usuario cargado:', currentUser);
-
-                    // Actualizar información del usuario en la UI
-                    updateUserUI();
-
-                    // Ahora cargar datos del dashboard
-                    loadDashboardData();
-                } else {
-                    console.error('❌ Error obteniendo info del usuario');
-                    window.location.href = '/login';
-                }
-            } catch (error) {
-                console.error('❌ Error cargando usuario:', error);
-                // No redirigir automáticamente, puede ser un error temporal
-                loadDashboardData(); // Intentar cargar dashboard anyway
-            }
-        }
-
-        function updateUserUI() {
-            if (!currentUser) return;
-
-            // Actualizar avatar y nombre solo si los elementos existen y no tienen contenido del servidor
-            const userAvatar = document.querySelector('.user-avatar');
-            const userName = document.querySelector('.user-name');
-            const userRole = document.querySelector('.user-role');
-
-            if (userAvatar && currentUser.first_name) {
-                // Solo actualizar si está vacío o tiene el valor por defecto
-                if (userAvatar.textContent.trim() === 'A' || userAvatar.textContent.trim() === '') {
-                    userAvatar.textContent = currentUser.first_name.charAt(0).toUpperCase();
-                }
-            }
-
-            if (userName && currentUser.first_name && currentUser.last_name) {
-                // Solo actualizar si tiene el valor por defecto
-                if (userName.textContent.trim() === 'Administrador') {
-                    userName.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
-                }
-            }
-
-            if (userRole && currentUser.role) {
-                // Solo actualizar si tiene el valor por defecto
-                if (userRole.textContent.trim() === 'Admin') {
-                    userRole.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-                }
-            }
-        }
-
-        function setupEventListeners() {
-            // Menu toggle para móvil
-            const menuToggle = document.getElementById('menuToggle');
-            const sidebar = document.getElementById('sidebar');
-
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-            });
-
-            // Navegación del sidebar
-            const menuLinks = document.querySelectorAll('.menu-link[data-section]');
-            menuLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const section = link.dataset.section;
-                    navigateToSection(section);
-                });
-            });
-
-            // Acciones rápidas
-            const actionBtns = document.querySelectorAll('.action-btn[data-section]');
-            actionBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const section = btn.dataset.section;
-                    navigateToSection(section);
-                });
-            });
-
-            // Notificaciones
-            const notificationBell = document.getElementById('notificationBell');
-            const notificationDropdown = document.getElementById('notificationDropdown');
-
-            notificationBell.addEventListener('click', (e) => {
-                e.stopPropagation();
-                notificationDropdown.classList.toggle('active');
-                loadNotifications();
-            });
-
-            // Cerrar dropdown al hacer clic fuera
-            document.addEventListener('click', (e) => {
-                if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
-                    notificationDropdown.classList.remove('active');
-                }
-            });
-        }
-
-        function navigateToSection(section) {
-    console.log(`🔄 Navegando a sección: ${section}`);
-
-    // Actualizar navegación activa
-    document.querySelectorAll('.menu-link').forEach(link => {
-        link.classList.remove('active');
-    });
-
-    const activeLink = document.querySelector(`[data-section="${section}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
-    }
-
-    // Actualizar título de página
-    const pageTitles = {
-        'dashboard': 'Dashboard',
-        'users': 'Gestión de Usuarios y Roles',
-        'schedules': 'Horarios del Personal',
-        'appointments': 'Gestión de Citas',
-        'pets': 'Gestión de Mascotas',
-        'medical-records': 'Historias Clínicas',
-        'clients': 'Gestión de Clientes',
-        'inventory': 'Gestión de Inventario',
-        'inventory-alerts': 'Alertas de Inventario',
-        'inventory-reports': 'Reportes de Inventario',
-        'notifications': 'Centro de Notificaciones',
-        'messaging': 'Sistema de Mensajería',
-        'financial-reports': 'Reportes Financieros',
-        'analytics': 'Analíticas y Métricas',
-        'settings': 'Configuración del Sistema'
-    };
-
-    document.getElementById('pageTitle').textContent = pageTitles[section] || 'Dashboard';
-
-    // Ocultar todas las secciones
-    document.querySelectorAll('.section-content').forEach(content => {
-        content.classList.remove('active');
-    });
-
-    // Mostrar sección seleccionada
-    const targetSection = document.getElementById(`section-${section}`);
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
-
-    // Cargar contenido si no se ha cargado antes O si es dashboard (siempre recargar)
-    if (!loadedSections.has(section) || section === 'dashboard') {
-        if (section === 'dashboard') {
-            // Para dashboard, recargar página para mostrar stats actualizados
-            location.reload();
-            return;
-        }
-
-        loadSectionContent(section);
-        loadedSections.add(section);
-    }
-
-    currentSection = section;
-
-    // Cerrar sidebar en móvil
-    if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.remove('active');
-    }
-}
-
+        // Cargar datos actualizados via AJAX
         async function loadDashboardData() {
             try {
                 const response = await fetch('/api/dashboard-data');
@@ -1133,195 +928,47 @@
 
             } catch (error) {
                 console.error('❌ Error cargando datos del dashboard:', error);
+                // No mostrar error al usuario, solo en consola
             }
         }
 
         function updateDashboardStats(data) {
-            // Actualizar solo si los elementos existen y los datos son diferentes
+            // Actualizar solo si los elementos existen y los datos son válidos
             if (data.total_pets !== undefined) {
-                document.getElementById('totalPets').textContent = data.total_pets;
+                const totalPetsEl = document.getElementById('totalPets');
+                if (totalPetsEl) totalPetsEl.textContent = data.total_pets;
             }
 
             if (data.appointments_today !== undefined) {
-                document.getElementById('appointmentsToday').textContent = data.appointments_today;
+                const appointmentsTodayEl = document.getElementById('appointmentsToday');
+                if (appointmentsTodayEl) appointmentsTodayEl.textContent = data.appointments_today;
             }
 
             if (data.low_stock_count !== undefined) {
-                document.getElementById('lowStockItems').textContent = data.low_stock_count;
+                const lowStockEl = document.getElementById('lowStockItems');
+                if (lowStockEl) lowStockEl.textContent = data.low_stock_count;
             }
 
             if (data.inventory_value !== undefined) {
-                document.getElementById('inventoryValue').textContent = formatCurrency(data.inventory_value);
+                const inventoryValueEl = document.getElementById('inventoryValue');
+                if (inventoryValueEl) inventoryValueEl.textContent = formatCurrency(data.inventory_value);
             }
 
             // Actualizar badge de notificaciones
             const notificationBadge = document.getElementById('notificationBadge');
             const notificationsCount = data.notifications_count || 0;
 
-            if (notificationsCount > 0) {
-                notificationBadge.textContent = notificationsCount;
-                notificationBadge.style.display = 'flex';
-            } else {
-                notificationBadge.style.display = 'none';
-            }
-        }
-
-        function showSectionError(sectionElement, errorMessage) {
-    sectionElement.innerHTML = `
-        <div style="text-align: center; padding: 60px 20px; color: #dc3545;">
-            <h3 style="color: #dc3545; margin-bottom: 15px;">❌ ${errorMessage}</h3>
-            <p>No se pudo cargar el contenido de esta sección.</p>
-            <div style="margin-top: 20px;">
-                <button onclick="loadSectionContent('${currentSection}')"
-                        style="background: #52B788; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-right: 10px;">
-                    Reintentar
-                </button>
-                <button onclick="navigateToSection('dashboard')"
-                        style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
-                    Volver al Dashboard
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-        function loadRecentActivities() {
-            const activityList = document.getElementById('activityList');
-
-            // Datos de ejemplo basados en datos reales
-            const activities = [
-                {
-                    type: 'appointment',
-                    title: 'Citas programadas hoy',
-                    description: `{{ appointments_today|length }} citas en agenda`,
-                    time: 'Actualizado ahora',
-                    icon: '📅'
-                },
-                {
-                    type: 'inventory',
-                    title: 'Estado del inventario',
-                    description: `{{ inventory_summary.low_stock_count or 0 }} medicamentos con stock bajo`,
-                    time: 'Hace 5 minutos',
-                    icon: '📦'
-                },
-                {
-                    type: 'user',
-                    title: 'Sistema activo',
-                    description: 'Panel de administrador accedido',
-                    time: 'Hace 1 minuto',
-                    icon: '👤'
-                }
-            ];
-
-            activityList.innerHTML = activities.map(activity => `
-                <li class="activity-item">
-                    <div class="activity-icon ${activity.type}">
-                        ${activity.icon}
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-description">${activity.description}</div>
-                        <div class="activity-time">${activity.time}</div>
-                    </div>
-                </li>
-            `).join('');
-        }
-
-        function loadNotifications() {
-            const notificationList = document.getElementById('notificationList');
-
-            // Ejemplo de notificaciones
-            const notifications = [
-                {
-                    id: '1',
-                    message: 'Stock bajo detectado en medicamentos',
-                    time: 'Hace 30 min',
-                    unread: true
-                },
-                {
-                    id: '2',
-                    message: 'Nueva cita programada para mañana',
-                    time: 'Hace 1 hora',
-                    unread: true
-                }
-            ];
-
-            if (notifications.length === 0) {
-                notificationList.innerHTML = `
-                    <li class="notification-item">
-                        <div class="notification-text">No hay notificaciones nuevas</div>
-                    </li>
-                `;
-                return;
-            }
-
-            notificationList.innerHTML = notifications.map(notification => `
-                <li class="notification-item ${notification.unread ? 'unread' : ''}"
-                    onclick="markNotificationAsRead('${notification.id}')">
-                    <div class="notification-text">${notification.message}</div>
-                    <div class="notification-time">${notification.time}</div>
-                </li>
-            `).join('');
-        }
-
-        function markNotificationAsRead(notificationId) {
-            console.log('Marcando notificación como leída:', notificationId);
-            // Implementar lógica de marcar como leída
-        }
-
-            async function loadSectionContent(section) {
-        const sectionElement = document.getElementById(`section-${section}`);
-        if (!sectionElement) return;
-
-        console.log(`📥 Cargando contenido para sección: ${section}`);
-
-        try {
-            // Mostrar loading
-            sectionElement.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <span>Cargando ${section}...</span>
-                </div>
-            `;
-
-            // Intentar cargar desde el endpoint de sections
-            const response = await fetch(`/admin/section/${section}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                if (data.success) {
-                    sectionElement.innerHTML = data.content;
-
-                    // Si es la sección de usuarios y tiene el template real, inicializar
-                    if (section === 'users' && !data.is_placeholder) {
-                        console.log('🎯 Sección de usuarios cargada desde template');
-                        // El template users-management.html ya tiene su propio JavaScript
-                        // que se ejecutará automáticamente
-                    } else if (data.is_placeholder) {
-                        console.log(`⚠️ Sección ${section} usando placeholder`);
-                    } else {
-                        console.log(`✅ Sección ${section} cargada desde template`);
-                    }
+            if (notificationBadge) {
+                if (notificationsCount > 0) {
+                    notificationBadge.textContent = notificationsCount;
+                    notificationBadge.style.display = 'flex';
                 } else {
-                    throw new Error(data.message || 'Error cargando sección');
+                    notificationBadge.style.display = 'none';
                 }
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-
-        } catch (error) {
-            console.error(`❌ Error cargando sección ${section}:`, error);
-            showSectionError(sectionElement, `Error cargando ${section}: ${error.message}`);
         }
-    }
 
-        // UTILIDADES
+        // Formatear moneda
         function formatCurrency(amount) {
             return new Intl.NumberFormat('es-CO', {
                 style: 'currency',
@@ -1330,25 +977,12 @@
             }).format(amount);
         }
 
-        function formatTimeAgo(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-
-            if (diffInMinutes < 1) return 'Ahora';
-            if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
-
-            const diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) return `Hace ${diffInHours}h`;
-
-            const diffInDays = Math.floor(diffInHours / 24);
-            return `Hace ${diffInDays}d`;
-        }
-
-        // MANEJO DE ERRORES GLOBAL
+        // Manejo de errores global
         window.addEventListener('error', (e) => {
             console.error('❌ Error global:', e.error);
         });
+
+        console.log('✅ Dashboard Admin inicializado correctamente');
     </script>
 </body>
 </html>
