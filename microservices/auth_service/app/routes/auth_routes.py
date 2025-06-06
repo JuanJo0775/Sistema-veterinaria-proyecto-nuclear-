@@ -46,6 +46,7 @@ def login():
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    """Registrar nuevo usuario - ACTUALIZADO para admin"""
     try:
         data = request.get_json()
 
@@ -56,20 +57,53 @@ def register():
                 'message': 'Email ya registrado'
             }), 400
 
-        user = auth_service.create_user(data)
+        # Si hay token de admin, permitir crear cualquier rol
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        current_user = None
+
+        if token:
+            current_user = auth_service.verify_token(token)
+
+        # Determinar rol
+        role = 'client'  # Por defecto
+        if current_user and current_user.role == 'admin':
+            # Admin puede crear cualquier rol
+            role = data.get('role', 'client')
+        elif 'role' in data and data['role'] != 'client':
+            # Solo admin puede crear roles no-client
+            return jsonify({
+                'success': False,
+                'message': 'No tienes permisos para crear usuarios con ese rol'
+            }), 403
+
+        # Crear usuario
+        user = User(
+            email=data.get('email'),
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            phone=data.get('phone'),
+            address=data.get('address'),
+            role=role,
+            is_active=data.get('is_active', True)
+        )
+
+        user.set_password(data.get('password'))
+
+        db.session.add(user)
+        db.session.commit()
 
         return jsonify({
             'success': True,
             'message': 'Usuario creado exitosamente',
-            'user_id': str(user.id)  # ← FIX: Convertir UUID a string
+            'user': user.to_dict()
         }), 201
 
     except Exception as e:
+        db.session.rollback()
         return jsonify({
             'success': False,
             'message': str(e)
         }), 500
-
 
 @auth_bp.route('/verify', methods=['POST'])
 def verify_token():
@@ -211,7 +245,7 @@ def get_all_users():
         if not user or user.role != 'admin':
             return jsonify({
                 'success': False,
-                'message': 'Acceso denegado'
+                'message': 'Acceso denegado. Solo administradores pueden ver usuarios.'
             }), 403
 
         # Obtener todos los usuarios
@@ -222,6 +256,238 @@ def get_all_users():
             'success': True,
             'users': users_data,
             'total': len(users_data)
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Error obteniendo usuarios: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@auth_bp.route('/users/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    """Actualizar usuario específico (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Obtener datos a actualizar
+        data = request.get_json()
+
+        # Buscar usuario a actualizar
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+
+        # Actualizar campos permitidos
+        updatable_fields = ['first_name', 'last_name', 'email', 'phone', 'address', 'role', 'is_active']
+
+        for field in updatable_fields:
+            if field in data:
+                setattr(target_user, field, data[field])
+
+        # Verificar email único si se está cambiando
+        if 'email' in data and data['email'] != target_user.email:
+            existing_user = User.query.filter_by(email=data['email']).first()
+            if existing_user and existing_user.id != target_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'Email ya está en uso'
+                }), 400
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Usuario actualizado exitosamente',
+            'user': target_user.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@auth_bp.route('/users/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """Eliminar usuario (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Buscar usuario a eliminar
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+
+        # No permitir eliminar al propio usuario admin
+        if str(target_user.id) == str(user.id):
+            return jsonify({
+                'success': False,
+                'message': 'No puedes eliminar tu propia cuenta'
+            }), 400
+
+        # En lugar de eliminar, desactivar el usuario
+        target_user.is_active = False
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Usuario desactivado exitosamente'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@auth_bp.route('/users/<user_id>/toggle-status', methods=['PUT'])
+def toggle_user_status(user_id):
+    """Activar/Desactivar usuario (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Buscar usuario
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+
+        # No permitir desactivar al propio usuario admin
+        if str(target_user.id) == str(user.id) and target_user.is_active:
+            return jsonify({
+                'success': False,
+                'message': 'No puedes desactivar tu propia cuenta'
+            }), 400
+
+        # Cambiar estado
+        target_user.is_active = not target_user.is_active
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Usuario {"activado" if target_user.is_active else "desactivado"} exitosamente',
+            'user': target_user.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@auth_bp.route('/users/<user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    """Obtener usuario específico (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Buscar usuario
+        target_user = User.query.get(user_id)
+        if not target_user:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'user': target_user.to_dict()
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@auth_bp.route('/users/stats', methods=['GET'])
+def get_users_stats():
+    """Obtener estadísticas de usuarios (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Calcular estadísticas
+        total_users = User.query.count()
+        active_users = User.query.filter_by(is_active=True).count()
+        inactive_users = User.query.filter_by(is_active=False).count()
+
+        # Por roles
+        admin_count = User.query.filter_by(role='admin', is_active=True).count()
+        vet_count = User.query.filter_by(role='veterinarian', is_active=True).count()
+        receptionist_count = User.query.filter_by(role='receptionist', is_active=True).count()
+        auxiliary_count = User.query.filter_by(role='auxiliary', is_active=True).count()
+        client_count = User.query.filter_by(role='client', is_active=True).count()
+
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_users': total_users,
+                'active_users': active_users,
+                'inactive_users': inactive_users,
+                'by_role': {
+                    'admin': admin_count,
+                    'veterinarian': vet_count,
+                    'receptionist': receptionist_count,
+                    'auxiliary': auxiliary_count,
+                    'client': client_count
+                }
+            }
         }), 200
 
     except Exception as e:
