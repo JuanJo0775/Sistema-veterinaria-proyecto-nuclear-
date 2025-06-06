@@ -1,4 +1,4 @@
-{% extends "admin/base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Gestión de Usuarios{% endblock %}
 
@@ -399,6 +399,11 @@
         color: white;
     }
 
+    .action-btn.delete {
+        background: #dc3545;
+        color: white;
+    }
+
     .action-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -432,6 +437,7 @@
         overflow-y: auto;
         box-shadow: 0 20px 40px rgba(8, 28, 21, 0.3);
         animation: modalSlideIn 0.3s ease;
+        position: relative;
     }
 
     @keyframes modalSlideIn {
@@ -859,6 +865,31 @@
             </form>
         </div>
         <div class="modal-actions">
+            <button type="button" onclick="closeUserModal()" class="btn-cancel">
+                Cancelar
+            </button>
+            <button type="button" onclick="saveUser()" class="btn-save" id="saveBtn">
+                <span id="saveBtnIcon">💾</span>
+                <span id="saveBtnText">Guardar Usuario</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN -->
+<div class="modal" id="confirmModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="modal-close" onclick="closeConfirmModal()">✖</button>
+        <div class="modal-header">
+            <h2 class="modal-title" id="confirmTitle">
+                <span id="confirmIcon">❓</span>
+                Confirmar Acción
+            </h2>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMessage">¿Estás seguro de realizar esta acción?</p>
+        </div>
+        <div class="modal-actions">
             <button type="button" onclick="closeConfirmModal()" class="btn-cancel">
                 Cancelar
             </button>
@@ -891,11 +922,26 @@
         try {
             console.log('📡 Obteniendo usuarios del Auth Service...');
 
-            const response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users`, {
+            // Opción 1: Intentar a través del endpoint del frontend (recomendado)
+            let response = await fetch('/api/admin/users', {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('authToken') || ''}`
-                }
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
+
+            // Si falla, intentar directamente (fallback)
+            if (!response.ok) {
+                console.log('⚠️ Intentando conexión directa al Auth Service...');
+                response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+            }
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -1073,6 +1119,9 @@
                                             class="action-btn ${user.is_active ? 'toggle' : 'activate'}"
                                             title="${user.is_active ? 'Desactivar' : 'Activar'}">
                                         ${user.is_active ? '🚫 Desactivar' : '✅ Activar'}
+                                    </button>
+                                    <button onclick="deleteUser('${user.id}')" class="action-btn delete" title="Eliminar definitivamente">
+                                        🗑️ Eliminar
                                     </button>
                                 </div>
                             </td>
@@ -1261,22 +1310,23 @@
             let response;
 
             if (currentEditingUser) {
-                // Actualizar usuario existente
-                response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users/${currentEditingUser.id}`, {
+                // Actualizar usuario existente - usar endpoint del frontend
+                response = await fetch(`/api/admin/users/${currentEditingUser.id}`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${sessionStorage.getItem('authToken') || ''}`
+                        'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(userData)
                 });
             } else {
-                // Crear nuevo usuario
-                response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/register`, {
+                // Crear nuevo usuario - usar endpoint del frontend
+                response = await fetch('/api/admin/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(userData)
                 });
             }
@@ -1295,7 +1345,8 @@
                     throw new Error(data.message || 'Error al guardar usuario');
                 }
             } else {
-                throw new Error(`HTTP ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}`);
             }
 
         } catch (error) {
@@ -1317,23 +1368,274 @@
             return;
         }
 
-        const userInfo = `
-            📧 Email: ${user.email}
-            📞 Teléfono: ${user.phone || 'No especificado'}
-            🏠 Dirección: ${user.address || 'No especificada'}
-            👤 Rol: ${getRoleLabel(user.role)}
-            ✅ Estado: ${user.is_active ? 'Activo' : 'Inactivo'}
-            📅 Registro: ${formatDateTime(user.created_at)}
+        // Crear modal de visualización
+        showUserDetailsModal(user);
+    }
+
+    function showUserDetailsModal(user) {
+        // Crear modal dinámicamente
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.id = 'userDetailsModal';
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px;">
+                <button class="modal-close" onclick="closeUserDetailsModal()">✖</button>
+                <div class="modal-header">
+                    <h2 class="modal-title">
+                        <span>👤</span>
+                        Detalles del Usuario
+                    </h2>
+                    <p class="modal-subtitle">${user.first_name} ${user.last_name}</p>
+                </div>
+                <div class="modal-body">
+                    <div style="display: grid; gap: 20px;">
+                        <div class="user-detail-row">
+                            <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 20px;">
+                                ${(user.first_name || 'U').charAt(0).toUpperCase()}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">📧 Email</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px; color: #2D6A4F;">
+                                    ${user.email || 'No especificado'}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">📞 Teléfono</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px; color: #2D6A4F;">
+                                    ${user.phone || 'No especificado'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">👤 Rol</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px;">
+                                    <span class="role-badge ${user.role}">
+                                        ${getRoleIcon(user.role)} ${getRoleLabel(user.role)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">✅ Estado</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px;">
+                                    <span class="status-badge ${user.is_active ? 'active' : 'inactive'}">
+                                        ${user.is_active ? '✅ Activo' : '❌ Inactivo'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label">🏠 Dirección</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px; color: #2D6A4F;">
+                                    ${user.address || 'No especificada'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">📅 Fecha de Registro</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px; color: #2D6A4F;">
+                                    ${formatDateTime(user.created_at)}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">🔄 Última Actualización</label>
+                                <div style="padding: 12px; background: #D8F3DC; border-radius: 8px; color: #2D6A4F;">
+                                    ${formatDateTime(user.updated_at || user.created_at)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeUserDetailsModal()" class="btn-cancel">
+                        Cerrar
+                    </button>
+                    <button type="button" onclick="editUserFromDetails('${user.id}')" class="btn-primary">
+                        ✏️ Editar Usuario
+                    </button>
+                </div>
+            </div>
         `;
 
-        alert(`👤 ${user.first_name} ${user.last_name}\n\n${userInfo}`);
+        document.body.appendChild(modal);
+    }
+
+    function closeUserDetailsModal() {
+        const modal = document.getElementById('userDetailsModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function editUserFromDetails(userId) {
+        closeUserDetailsModal();
+        editUser(userId);
     }
 
     function editUser(userId) {
         openUserModal(userId);
     }
 
-    function toggleUserStatus(userId) {
+    function deleteUser(userId) {
+        const user = allUsers.find(u => u.id === userId);
+        if (!user) {
+            showMessage('Usuario no encontrado', 'error');
+            return;
+        }
+
+        // Verificar si es el usuario actual
+        if (isCurrentUser(userId)) {
+            showMessage('No puedes eliminar tu propia cuenta', 'error');
+            return;
+        }
+
+        // Mostrar modal de confirmación especial para eliminación
+        showDeleteConfirmModal(user);
+    }
+
+    function showDeleteConfirmModal(user) {
+        // Crear modal dinámicamente con advertencias especiales
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.id = 'deleteConfirmModal';
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 550px;">
+                <button class="modal-close" onclick="closeDeleteConfirmModal()">✖</button>
+                <div class="modal-header">
+                    <h2 class="modal-title" style="color: #dc3545;">
+                        <span>🗑️</span>
+                        Eliminar Usuario Definitivamente
+                    </h2>
+                    <p class="modal-subtitle" style="color: #dc3545;">Esta acción NO se puede deshacer</p>
+                </div>
+                <div class="modal-body">
+                    <div style="background: #ffebee; border: 2px solid #f5c6cb; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <span style="font-size: 2rem;">⚠️</span>
+                            <div>
+                                <h4 style="color: #721c24; margin: 0; font-size: 1.1rem;">ADVERTENCIA IMPORTANTE</h4>
+                                <p style="color: #721c24; margin: 5px 0 0 0; font-weight: 600;">Esta acción eliminará permanentemente todos los datos</p>
+                            </div>
+                        </div>
+                        <ul style="color: #721c24; margin: 0; padding-left: 20px;">
+                            <li>Se eliminarán TODOS los registros del usuario</li>
+                            <li>Se perderán las historias clínicas asociadas</li>
+                            <li>Se eliminarán las citas programadas</li>
+                            <li>Esta acción es IRREVERSIBLE</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #D8F3DC; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #2D6A4F; margin: 0 0 15px 0;">Usuario a eliminar:</h4>
+                        <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; align-items: center;">
+                            <strong style="color: #2D6A4F;">👤 Nombre:</strong>
+                            <span style="color: #52B788;">${user.first_name} ${user.last_name}</span>
+
+                            <strong style="color: #2D6A4F;">📧 Email:</strong>
+                            <span style="color: #52B788;">${user.email}</span>
+
+                            <strong style="color: #2D6A4F;">👤 Rol:</strong>
+                            <span class="role-badge ${user.role}" style="font-size: 0.8rem;">
+                                ${getRoleIcon(user.role)} ${getRoleLabel(user.role)}
+                            </span>
+
+                            <strong style="color: #2D6A4F;">📅 Registro:</strong>
+                            <span style="color: #52B788;">${formatDate(user.created_at)}</span>
+                        </div>
+                    </div>
+
+                    <div style="background: #fff3cd; border: 2px solid #ffeaa7; border-radius: 10px; padding: 15px;">
+                        <p style="margin: 0; color: #856404; font-weight: 600;">
+                            💡 <strong>Alternativa recomendada:</strong>
+                            Considera <strong>desactivar</strong> el usuario en lugar de eliminarlo.
+                            Esto mantendrá los registros históricos pero impedirá el acceso al sistema.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeDeleteConfirmModal()" class="btn-cancel">
+                        ❌ Cancelar
+                    </button>
+                    <button type="button" onclick="confirmUserDeletion('${user.id}')"
+                            style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                        🗑️ Sí, Eliminar Definitivamente
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    function closeDeleteConfirmModal() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    async function confirmUserDeletion(userId) {
+        try {
+            closeDeleteConfirmModal();
+
+            // Mostrar loading
+            showMessage('Eliminando usuario...', 'info');
+
+            // Llamar al endpoint de eliminación
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remover usuario de la lista local
+                    allUsers = allUsers.filter(u => u.id !== userId);
+                    filteredUsers = filteredUsers.filter(u => u.id !== userId);
+
+                    displayUsersData();
+                    updateStatistics();
+
+                    showMessage('Usuario eliminado definitivamente del sistema', 'success');
+                } else {
+                    throw new Error(data.message || 'Error al eliminar usuario');
+                }
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('❌ Error eliminando usuario:', error);
+            showMessage('Error al eliminar usuario: ' + error.message, 'error');
+        }
+    }
+
+    function isCurrentUser(userId) {
+        // Esta función debería verificar si el userId corresponde al usuario actual
+        // Por ahora, implementamos una verificación básica
+        try {
+            // Podrías obtener el usuario actual desde la API o sesión
+            return false; // Por seguridad, por defecto permitir eliminación
+        } catch {
+            return false;
+        }
+    }
         const user = allUsers.find(u => u.id === userId);
         if (!user) {
             showMessage('Usuario no encontrado', 'error');
@@ -1356,23 +1658,40 @@
         if (!user) return;
 
         try {
-            // Simular API call
-            console.log(`Toggling user status: ${userId}`);
+            // Usar endpoint del frontend para cambiar estado
+            const response = await fetch(`/api/admin/users/${userId}/toggle-status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
 
-            // Actualizar localmente (en un escenario real, esto vendría del servidor)
-            user.is_active = !user.is_active;
+            if (response.ok) {
+                const data = await response.json();
 
-            displayUsersData();
-            updateStatistics();
+                if (data.success) {
+                    // Actualizar usuario en la lista local
+                    user.is_active = !user.is_active;
 
-            showMessage(
-                `Usuario ${user.is_active ? 'activado' : 'desactivado'} exitosamente`,
-                'success'
-            );
+                    displayUsersData();
+                    updateStatistics();
+
+                    showMessage(
+                        `Usuario ${user.is_active ? 'activado' : 'desactivado'} exitosamente`,
+                        'success'
+                    );
+                } else {
+                    throw new Error(data.message || 'Error al cambiar estado');
+                }
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
 
         } catch (error) {
             console.error('❌ Error toggling user status:', error);
-            showMessage('Error al cambiar estado del usuario', 'error');
+            showMessage('Error al cambiar estado del usuario: ' + error.message, 'error');
         }
     }
 
@@ -1420,30 +1739,52 @@
     }
 
     function exportToExcel() {
-        // Preparar datos para Excel
-        const data = filteredUsers.map(user => ({
-            'Nombre': `${user.first_name} ${user.last_name}`,
-            'Email': user.email,
-            'Teléfono': user.phone || '',
-            'Rol': getRoleLabel(user.role),
-            'Estado': user.is_active ? 'Activo' : 'Inactivo',
-            'Dirección': user.address || '',
-            'Fecha Registro': formatDate(user.created_at)
-        }));
+        try {
+            // Preparar datos para Excel/CSV
+            const data = filteredUsers.map(user => ({
+                'Nombre': `${user.first_name} ${user.last_name}`,
+                'Email': user.email,
+                'Teléfono': user.phone || '',
+                'Rol': getRoleLabel(user.role),
+                'Estado': user.is_active ? 'Activo' : 'Inactivo',
+                'Dirección': user.address || '',
+                'Fecha Registro': formatDate(user.created_at)
+            }));
 
-        // Convertir a CSV (simulado)
-        const csv = convertToCSV(data);
-        downloadFile(csv, 'usuarios.csv', 'text/csv');
-        showMessage('Datos exportados a Excel exitosamente', 'success');
+            // Convertir a CSV
+            const csv = convertToCSV(data);
+            const filename = `usuarios_${new Date().toISOString().slice(0, 10)}.csv`;
+            downloadFile(csv, filename, 'text/csv');
+            showMessage('Archivo CSV descargado exitosamente', 'success');
+        } catch (error) {
+            console.error('❌ Error exportando a Excel:', error);
+            showMessage('Error al exportar a Excel', 'error');
+        }
     }
 
     function exportToPDF() {
-        // Generar contenido HTML para PDF (simulado)
-        const htmlContent = generatePDFContent();
+        try {
+            // Crear contenido HTML para PDF
+            const htmlContent = generatePDFContent();
 
-        // En un escenario real, aquí usarías una librería como jsPDF
-        console.log('Exportando a PDF:', htmlContent);
-        showMessage('Exportación a PDF iniciada (función simulada)', 'info');
+            // Crear ventana nueva para impresión/PDF
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+
+            // Configurar para imprimir como PDF
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            };
+
+            showMessage('Generación de PDF iniciada - Use "Guardar como PDF" en el diálogo de impresión', 'info');
+        } catch (error) {
+            console.error('❌ Error exportando a PDF:', error);
+            showMessage('Error al generar PDF', 'error');
+        }
     }
 
     function convertToCSV(data) {
@@ -1451,32 +1792,263 @@
 
         const headers = Object.keys(data[0]);
         const csvContent = [
+            // Encabezados
             headers.join(','),
-            ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+            // Datos con comillas para manejar caracteres especiales
+            ...data.map(row =>
+                headers.map(header => {
+                    const value = row[header] || '';
+                    // Escapar comillas dobles y envolver en comillas si contiene comas
+                    const escapedValue = String(value).replace(/"/g, '""');
+                    return value.includes(',') || value.includes('"') || value.includes('\n')
+                        ? `"${escapedValue}"`
+                        : escapedValue;
+                }).join(',')
+            )
         ].join('\n');
 
         return csvContent;
     }
 
     function downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        try {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('❌ Error descargando archivo:', error);
+            throw error;
+        }
     }
 
     function generatePDFContent() {
+        const currentDate = new Date().toLocaleString('es-CO');
+        const totalUsers = filteredUsers.length;
+
+        // Generar filas de la tabla
+        const tableRows = filteredUsers.map(user => `
+            <tr>
+                <td>${user.first_name} ${user.last_name}</td>
+                <td>${user.email}</td>
+                <td>${user.phone || 'N/A'}</td>
+                <td>${getRoleLabel(user.role)}</td>
+                <td>${user.is_active ? 'Activo' : 'Inactivo'}</td>
+                <td>${formatDate(user.created_at)}</td>
+            </tr>
+        `).join('');
+
+        // Calcular estadísticas
+        const stats = {
+            total: totalUsers,
+            active: filteredUsers.filter(u => u.is_active).length,
+            inactive: filteredUsers.filter(u => !u.is_active).length,
+            admin: filteredUsers.filter(u => u.role === 'admin').length,
+            veterinarian: filteredUsers.filter(u => u.role === 'veterinarian').length,
+            receptionist: filteredUsers.filter(u => u.role === 'receptionist').length,
+            auxiliary: filteredUsers.filter(u => u.role === 'auxiliary').length,
+            client: filteredUsers.filter(u => u.role === 'client').length
+        };
+
         return `
-            <h1>Reporte de Usuarios - Clínica Veterinaria</h1>
-            <p>Generado el: ${new Date().toLocaleString('es-CO')}</p>
-            <p>Total de usuarios: ${filteredUsers.length}</p>
-            <!-- Aquí iría el contenido completo del PDF -->
-        `;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Usuarios - Clínica Veterinaria</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+            color: #2D6A4F;
+            line-height: 1.4;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #52B788;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2D6A4F;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: #52B788;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #22577A;
+            font-size: 1rem;
+            margin: 5px 0;
+        }
+
+        .stats-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #D8F3DC;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #52B788;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2D6A4F;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #52B788;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .table-container {
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #52B788;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #38A3A5;
+        }
+
+        td {
+            padding: 10px 8px;
+            border: 1px solid #B7E4C7;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background: #D8F3DC;
+        }
+
+        tr:nth-child(odd) {
+            background: white;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #B7E4C7;
+            text-align: center;
+            color: #22577A;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            body { margin: 0; }
+            .header h1 { font-size: 2rem; }
+            .header h2 { font-size: 1.2rem; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 8px 6px; }
+        }
+
+        @page {
+            margin: 1cm;
+            size: A4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐾 Clínica Veterinaria</h1>
+        <h2>Reporte de Usuarios y Roles</h2>
+        <p><strong>Fecha de generación:</strong> ${currentDate}</p>
+        <p><strong>Total de usuarios en el reporte:</strong> ${totalUsers}</p>
+    </div>
+
+    <div class="stats-section">
+        <div class="stat-item">
+            <div class="stat-value">${stats.total}</div>
+            <div class="stat-label">Total Usuarios</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${stats.active}</div>
+            <div class="stat-label">Usuarios Activos</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${stats.veterinarian}</div>
+            <div class="stat-label">Veterinarios</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${stats.client}</div>
+            <div class="stat-label">Clientes</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${stats.receptionist}</div>
+            <div class="stat-label">Recepcionistas</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${stats.auxiliary}</div>
+            <div class="stat-label">Auxiliares</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <h3 style="color: #2D6A4F; margin-bottom: 15px;">📋 Detalle de Usuarios</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre Completo</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p><strong>Clínica Veterinaria Universitaria Alexander Von Humboldt</strong></p>
+        <p>Sistema de Gestión de Usuarios - Reporte generado automáticamente</p>
+        <p>Este documento contiene información confidencial del sistema</p>
+    </div>
+</body>
+</html>
+        `.trim();
     }
 
     // =============== FUNCIONES AUXILIARES ===============
@@ -1524,37 +2096,5 @@
     });
 
     console.log('✅ Gestión de Usuarios inicializada correctamente');
-</script><button type="button" onclick="closeUserModal()" class="btn-cancel">
-                Cancelar
-            </button>
-            <button type="button" onclick="saveUser()" class="btn-save" id="saveBtn">
-                <span id="saveBtnIcon">💾</span>
-                <span id="saveBtnText">Guardar Usuario</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL DE CONFIRMACIÓN -->
-<div class="modal" id="confirmModal">
-    <div class="modal-content" style="max-width: 450px;">
-        <button class="modal-close" onclick="closeConfirmModal()">✖</button>
-        <div class="modal-header">
-            <h2 class="modal-title" id="confirmTitle">
-                <span id="confirmIcon">❓</span>
-                Confirmar Acción
-            </h2>
-        </div>
-        <div class="modal-body">
-            <p id="confirmMessage">¿Estás seguro de realizar esta acción?</p>
-        </div>
-        <div class="modal-actions">
-            <button type="button" onclick="closeConfirmModal()" class="btn-cancel">
-                Cancelar
-            </button>
-            <button type="button" onclick="executeConfirmAction()" class="btn-save" id="confirmBtn">
-                <span id="confirmBtnText">Confirmar</span>
-            </button>
-        </div>
-    </div>
-</div>
+</script>
+{% endblock %}

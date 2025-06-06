@@ -1,4 +1,4 @@
-# frontend/app/routes/frontend_routes.py - VERSIÓN ARREGLADA
+# frontend/app/routes/frontend_routes.py - VERSIÓN CORREGIDA
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from functools import wraps
 import requests
@@ -8,20 +8,17 @@ frontend_bp = Blueprint('frontend', __name__)
 
 def login_required(f):
     """Decorador para rutas que requieren autenticación"""
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user' not in session:
             flash('Debes iniciar sesión para acceder a esta página.', 'warning')
             return redirect(url_for('frontend.login'))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
 def role_required(required_roles):
     """Decorador para rutas que requieren roles específicos"""
-
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -35,9 +32,7 @@ def role_required(required_roles):
                 return redirect(url_for('frontend.dashboard'))
 
             return f(*args, **kwargs)
-
         return decorated_function
-
     return decorator
 
 
@@ -215,47 +210,10 @@ def admin_dashboard():
 @frontend_bp.route('/admin/users')
 @role_required(['admin'])
 def admin_users():
-    """Página de gestión de usuarios"""
+    """Página de gestión de usuarios - ÚNICA DEFINICIÓN"""
     try:
-        headers = {'Authorization': f"Bearer {session.get('token')}"}
-
-        # Obtener todos los usuarios desde Auth Service
-        users_data = []
-        users_stats = {
-            'total': 0,
-            'veterinarians': 0,
-            'clients': 0,
-            'active': 0
-        }
-
-        try:
-            auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/users"
-            response = requests.get(auth_url, headers=headers, timeout=10)
-
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('success'):
-                    users_data = data.get('users', [])
-
-                    # Calcular estadísticas
-                    users_stats['total'] = len(users_data)
-                    users_stats['veterinarians'] = len([u for u in users_data if u.get('role') == 'veterinarian'])
-                    users_stats['clients'] = len([u for u in users_data if u.get('role') == 'client'])
-                    users_stats['active'] = len([u for u in users_data if u.get('is_active', True)])
-
-                    print(f"✅ Usuarios cargados: {users_stats['total']}")
-                else:
-                    print(f"⚠️ Error en respuesta de usuarios: {data.get('message')}")
-            else:
-                print(f"⚠️ Error HTTP obteniendo usuarios: {response.status_code}")
-
-        except Exception as e:
-            print(f"⚠️ Error conectando con Auth Service: {e}")
-
         user = session.get('user', {})
         template_data = {
-            'users_data': users_data,
-            'users_stats': users_stats,
             'user': user,
             'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
             'user_role': user.get('role', 'admin').title(),
@@ -274,16 +232,28 @@ def admin_users():
 @role_required(['admin'])
 def admin_inventory():
     """Página de gestión de inventario"""
-    return render_template('admin/sections/inventory-management.html',
-                           user=session.get('user', {}))
+    user = session.get('user', {})
+    template_data = {
+        'user': user,
+        'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
+        'user_role': user.get('role', 'admin').title(),
+        'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
+    }
+    return render_template('admin/sections/inventory-management.html', **template_data)
 
 
 @frontend_bp.route('/admin/appointments')
 @role_required(['admin'])
 def admin_appointments():
     """Página de gestión de citas"""
-    return render_template('admin/sections/appointments-management.html',
-                           user=session.get('user', {}))
+    user = session.get('user', {})
+    template_data = {
+        'user': user,
+        'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
+        'user_role': user.get('role', 'admin').title(),
+        'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
+    }
+    return render_template('admin/sections/appointments-management.html', **template_data)
 
 
 # =============== OTROS DASHBOARDS ===============
@@ -378,6 +348,207 @@ def dashboard_data():
         }), 500
 
 
+@frontend_bp.route('/api/admin/users')
+@role_required(['admin'])
+def api_get_users():
+    """API endpoint para obtener usuarios (para AJAX del frontend)"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+
+        # Obtener usuarios desde Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/users"
+        response = requests.get(auth_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify(data)
+        elif response.status_code == 403:
+            return jsonify({
+                'success': False,
+                'message': 'Token de autorización inválido o expirado'
+            }), 403
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Error del Auth Service: {response.status_code}'
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_get_users: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@frontend_bp.route('/api/admin/users', methods=['POST'])
+@role_required(['admin'])
+def api_create_user():
+    """Crear nuevo usuario"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+        data = request.get_json()
+
+        # Crear usuario en Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/register"
+        response = requests.post(auth_url, json=data, headers=headers, timeout=10)
+
+        if response.status_code == 201:
+            return jsonify(response.json())
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith(
+                'application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', f'Error del Auth Service: {response.status_code}')
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_create_user: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@frontend_bp.route('/api/admin/users/<user_id>', methods=['PUT'])
+@role_required(['admin'])
+def api_update_user(user_id):
+    """Actualizar usuario específico"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+        data = request.get_json()
+
+        # Actualizar usuario en Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/users/{user_id}"
+        response = requests.put(auth_url, json=data, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith(
+                'application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', f'Error del Auth Service: {response.status_code}')
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_update_user: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@frontend_bp.route('/api/admin/users/<user_id>/toggle-status', methods=['PUT'])
+@role_required(['admin'])
+def api_toggle_user_status(user_id):
+    """Activar/Desactivar usuario"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+
+        # Cambiar estado en Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/users/{user_id}/toggle-status"
+        response = requests.put(auth_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith(
+                'application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', f'Error del Auth Service: {response.status_code}')
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_toggle_user_status: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@frontend_bp.route('/api/admin/users/<user_id>', methods=['DELETE'])
+@role_required(['admin'])
+def api_delete_user(user_id):
+    """Eliminar usuario definitivamente"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+
+        # Verificar que no sea el usuario actual
+        current_user = session.get('user', {})
+        if current_user.get('id') == user_id:
+            return jsonify({
+                'success': False,
+                'message': 'No puedes eliminar tu propia cuenta'
+            }), 400
+
+        # Eliminar usuario en Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/users/{user_id}"
+        response = requests.delete(auth_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            return jsonify(response.json())
+        elif response.status_code == 400:
+            # Error de validación (como intentar eliminar propia cuenta)
+            error_data = response.json() if response.headers.get('content-type', '').startswith(
+                'application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', 'No se puede eliminar este usuario')
+            }), 400
+        elif response.status_code == 404:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith(
+                'application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', f'Error del Auth Service: {response.status_code}')
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_delete_user: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @frontend_bp.route('/health')
 def health():
     """Health check endpoint"""
@@ -385,74 +556,3 @@ def health():
         'status': 'healthy',
         'service': 'frontend_service'
     }), 200
-
-@frontend_bp.route('/admin/users')
-@role_required(['admin'])
-def admin_users():
-    """Página de gestión de usuarios"""
-    try:
-        user = session.get('user', {})
-        template_data = {
-            'user': user,
-            'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
-            'user_role': user.get('role', 'admin').title(),
-            'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
-        }
-
-        return render_template('admin/users.html', **template_data)
-
-    except Exception as e:
-        print(f"❌ Error en admin users: {e}")
-        flash('Error al cargar la gestión de usuarios', 'error')
-        return redirect(url_for('frontend.admin_dashboard'))
-
-
-# También actualizar la ruta del dashboard para usar el template base
-@frontend_bp.route('/admin/dashboard')
-@role_required(['admin'])
-def admin_dashboard():
-    """Dashboard para administradores - mantener como está"""
-    # El dashboard ya está funcionando bien, no lo tocamos
-    try:
-        headers = {'Authorization': f"Bearer {session.get('token')}"}
-
-        print(f"🔐 Admin dashboard - Usuario: {session.get('user')}")
-        print(f"🔐 Token: {session.get('token')[:50]}..." if session.get('token') else "No token")
-
-        # Obtener resumen del inventario
-        inventory_url = f"{current_app.config['INVENTORY_SERVICE_URL']}/inventory/summary"
-        inventory_response = requests.get(inventory_url, headers=headers, timeout=10)
-        inventory_summary = {}
-        if inventory_response.status_code == 200:
-            inventory_data = inventory_response.json()
-            if inventory_data.get('success'):
-                inventory_summary = inventory_data.get('summary', {})
-
-        # Obtener estadísticas de citas
-        appointments_url = f"{current_app.config['APPOINTMENT_SERVICE_URL']}/appointments/today"
-        appointments_response = requests.get(appointments_url, headers=headers, timeout=10)
-        appointments_today = []
-        if appointments_response.status_code == 200:
-            appointments_data = appointments_response.json()
-            if appointments_data.get('success'):
-                appointments_today = appointments_data.get('appointments', [])
-
-        user = session.get('user', {})
-        template_data = {
-            'inventory_summary': inventory_summary,
-            'appointments_today': appointments_today,
-            'user': user,
-            'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
-            'user_role': user.get('role', 'admin').title(),
-            'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
-        }
-
-        return render_template('admin/dashboard.html', **template_data)
-
-    except requests.RequestException as e:
-        print(f"❌ Error en admin dashboard: {e}")
-        flash('Error al cargar el dashboard', 'error')
-        return render_template('admin/dashboard.html',
-                               inventory_summary={},
-                               appointments_today=[],
-                               user=session.get('user'))
