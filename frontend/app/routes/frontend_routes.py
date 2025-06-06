@@ -551,6 +551,106 @@ def api_delete_user(user_id):
             'message': str(e)
         }), 500
 
+@frontend_bp.route('/admin/schedules')
+@role_required(['admin'])
+def admin_schedules():
+    """Página de gestión de horarios"""
+    user = session.get('user', {})
+    template_data = {
+        'user': user,
+        'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
+        'user_role': user.get('role', 'admin').title(),
+        'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
+    }
+    return render_template('admin/sections/schedules-management.html', **template_data)
+
+
+# =============== API ENDPOINTS PARA HORARIOS ===============
+
+@frontend_bp.route('/api/admin/schedules')
+@role_required(['admin'])
+def api_get_schedules():
+    """API endpoint para obtener horarios (para AJAX del frontend)"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+
+        # Obtener horarios desde Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/schedules"
+        response = requests.get(auth_url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify(data)
+        elif response.status_code == 403:
+            return jsonify({
+                'success': False,
+                'message': 'Token de autorización inválido o expirado'
+            }), 403
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Error del Auth Service: {response.status_code}'
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service para horarios: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_get_schedules: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@frontend_bp.route('/api/admin/schedules/<user_id>', methods=['PUT'])
+@role_required(['admin'])
+def api_update_user_schedule(user_id):
+    """Actualizar horario de un usuario específico"""
+    try:
+        headers = {'Authorization': f"Bearer {session.get('token')}"}
+        data = request.get_json()
+
+        # Actualizar horario en Auth Service
+        auth_url = f"{current_app.config['AUTH_SERVICE_URL']}/auth/schedules/{user_id}"
+        response = requests.put(auth_url, json=data, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            return jsonify(response.json())
+        elif response.status_code == 404:
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 404
+        elif response.status_code == 400:
+            error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', 'Datos de horario inválidos')
+            }), 400
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+            return jsonify({
+                'success': False,
+                'message': error_data.get('message', f'Error del Auth Service: {response.status_code}')
+            }), response.status_code
+
+    except requests.RequestException as e:
+        print(f"❌ Error conectando con Auth Service: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error de conexión con el servicio de autenticación'
+        }), 500
+    except Exception as e:
+        print(f"❌ Error en api_update_user_schedule: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @frontend_bp.route('/health')
 def health():
     """Health check endpoint"""
