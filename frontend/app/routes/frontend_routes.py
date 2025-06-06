@@ -1,4 +1,6 @@
 # frontend/app/routes/frontend_routes.py - VERSIÓN CORREGIDA
+from datetime import datetime
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from functools import wraps
 import requests
@@ -556,3 +558,4 @@ def health():
         'status': 'healthy',
         'service': 'frontend_service'
     }), 200
+

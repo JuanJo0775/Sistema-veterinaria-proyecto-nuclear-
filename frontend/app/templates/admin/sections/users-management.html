@@ -1626,74 +1626,80 @@
         }
     }
 
-    function isCurrentUser(userId) {
-        // Esta función debería verificar si el userId corresponde al usuario actual
-        // Por ahora, implementamos una verificación básica
-        try {
-            // Podrías obtener el usuario actual desde la API o sesión
-            return false; // Por seguridad, por defecto permitir eliminación
-        } catch {
-            return false;
-        }
+    // 🔧 REEMPLAZA la función isCurrentUser y todo el código suelto con esto:
+
+function isCurrentUser(userId) {
+    // Esta función debería verificar si el userId corresponde al usuario actual
+    // Por ahora, implementamos una verificación básica
+    try {
+        // Podrías obtener el usuario actual desde la API o sesión
+        return false; // Por seguridad, por defecto permitir eliminación
+    } catch {
+        return false;
     }
-        const user = allUsers.find(u => u.id === userId);
-        if (!user) {
-            showMessage('Usuario no encontrado', 'error');
-            return;
-        }
+}
 
-        const action = user.is_active ? 'desactivar' : 'activar';
-        const actionIcon = user.is_active ? '🚫' : '✅';
-
-        showConfirmModal(
-            `${actionIcon} Confirmar ${action}`,
-            `¿Estás seguro de ${action} al usuario ${user.first_name} ${user.last_name}?`,
-            () => executeToggleUserStatus(userId),
-            user.is_active ? 'toggle' : 'activate'
-        );
+function toggleUserStatus(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) {
+        showMessage('Usuario no encontrado', 'error');
+        return;
     }
 
-    async function executeToggleUserStatus(userId) {
-        const user = allUsers.find(u => u.id === userId);
-        if (!user) return;
+    const action = user.is_active ? 'desactivar' : 'activar';
+    const actionIcon = user.is_active ? '🚫' : '✅';
 
-        try {
-            // Usar endpoint del frontend para cambiar estado
-            const response = await fetch(`/api/admin/users/${userId}/toggle-status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
+    showConfirmModal(
+        `${actionIcon} Confirmar ${action}`,
+        `¿Estás seguro de ${action} al usuario ${user.first_name} ${user.last_name}?`,
+        () => executeToggleUserStatus(userId),
+        user.is_active ? 'toggle' : 'activate'
+    );
+}
 
-            if (response.ok) {
-                const data = await response.json();
+async function executeToggleUserStatus(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
 
-                if (data.success) {
-                    // Actualizar usuario en la lista local
-                    user.is_active = !user.is_active;
+    try {
+        // Usar endpoint del frontend para cambiar estado
+        const response = await fetch(`/api/admin/users/${userId}/toggle-status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
 
-                    displayUsersData();
-                    updateStatistics();
+        if (response.ok) {
+            const data = await response.json();
 
-                    showMessage(
-                        `Usuario ${user.is_active ? 'activado' : 'desactivado'} exitosamente`,
-                        'success'
-                    );
-                } else {
-                    throw new Error(data.message || 'Error al cambiar estado');
-                }
+            if (data.success) {
+                // Actualizar usuario en la lista local
+                user.is_active = !user.is_active;
+
+                displayUsersData();
+                updateStatistics();
+
+                showMessage(
+                    `Usuario ${user.is_active ? 'activado' : 'desactivado'} exitosamente`,
+                    'success'
+                );
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP ${response.status}`);
+                throw new Error(data.message || 'Error al cambiar estado');
             }
-
-        } catch (error) {
-            console.error('❌ Error toggling user status:', error);
-            showMessage('Error al cambiar estado del usuario: ' + error.message, 'error');
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}`);
         }
+
+    } catch (error) {
+        console.error('❌ Error toggling user status:', error);
+        showMessage('Error al cambiar estado del usuario: ' + error.message, 'error');
     }
+}
+
+    
 
     // =============== MODAL DE CONFIRMACIÓN ===============
     function showConfirmModal(title, message, onConfirm, actionType = 'confirm') {
