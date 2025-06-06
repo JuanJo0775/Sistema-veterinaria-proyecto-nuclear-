@@ -198,3 +198,34 @@ def health():
         'status': 'healthy',
         'service': 'auth_service'
     }), 200
+
+
+@auth_bp.route('/users', methods=['GET'])
+def get_all_users():
+    """Obtener todos los usuarios (solo para admin)"""
+    try:
+        # Verificar token de administrador
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = auth_service.verify_token(token)
+
+        if not user or user.role != 'admin':
+            return jsonify({
+                'success': False,
+                'message': 'Acceso denegado'
+            }), 403
+
+        # Obtener todos los usuarios
+        users = User.query.all()
+        users_data = [user.to_dict() for user in users]
+
+        return jsonify({
+            'success': True,
+            'users': users_data,
+            'total': len(users_data)
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
