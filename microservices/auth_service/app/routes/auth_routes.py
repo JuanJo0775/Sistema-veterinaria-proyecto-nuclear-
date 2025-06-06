@@ -324,7 +324,7 @@ def update_user(user_id):
 
 @auth_bp.route('/users/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    """Eliminar usuario (solo para admin)"""
+    """Eliminar usuario definitivamente (solo para admin)"""
     try:
         # Verificar token de administrador
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -333,7 +333,7 @@ def delete_user(user_id):
         if not user or user.role != 'admin':
             return jsonify({
                 'success': False,
-                'message': 'Acceso denegado'
+                'message': 'Acceso denegado. Solo administradores pueden eliminar usuarios.'
             }), 403
 
         # Buscar usuario a eliminar
@@ -351,20 +351,26 @@ def delete_user(user_id):
                 'message': 'No puedes eliminar tu propia cuenta'
             }), 400
 
-        # En lugar de eliminar, desactivar el usuario
-        target_user.is_active = False
+        # Guardar información del usuario para el log
+        user_info = f"{target_user.first_name} {target_user.last_name} ({target_user.email})"
+
+        # ELIMINAR DEFINITIVAMENTE de la base de datos
+        db.session.delete(target_user)
         db.session.commit()
+
+        print(f"🗑️ Usuario eliminado definitivamente: {user_info} por {user.email}")
 
         return jsonify({
             'success': True,
-            'message': 'Usuario desactivado exitosamente'
+            'message': f'Usuario {user_info} eliminado definitivamente del sistema'
         }), 200
 
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Error eliminando usuario: {e}")
         return jsonify({
             'success': False,
-            'message': str(e)
+            'message': f'Error interno al eliminar usuario: {str(e)}'
         }), 500
 
 @auth_bp.route('/users/<user_id>/toggle-status', methods=['PUT'])
