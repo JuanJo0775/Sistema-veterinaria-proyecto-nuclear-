@@ -289,10 +289,17 @@ def admin_dashboard():
             if appointments_data.get('success'):
                 appointments_today = appointments_data.get('appointments', [])
 
-        return render_template('admin/dashboard.html',
-                               inventory_summary=inventory_summary,
-                               appointments_today=appointments_today,
-                               user=session.get('user'))
+        user = session.get('user', {})
+        template_data = {
+            'inventory_summary': inventory_summary,
+            'appointments_today': appointments_today,
+            'user': user,
+            'user_name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or 'Administrador',
+            'user_role': user.get('role', 'admin').title(),
+            'user_initial': user.get('first_name', 'A')[0].upper() if user.get('first_name') else 'A'
+        }
+
+        return render_template('admin/dashboard.html', **template_data)
 
     except requests.RequestException as e:
         print(f"❌ Error en admin dashboard: {e}")
@@ -410,3 +417,65 @@ def health():
         'status': 'healthy',
         'service': 'frontend_service'
     }), 200
+
+
+@frontend_bp.route('/admin/section/<section_name>')
+@role_required(['admin'])
+def load_admin_section(section_name):
+    """Cargar sección específica del panel admin"""
+    try:
+        # Mapeo de secciones a templates
+        section_templates = {
+            'users': 'admin/sections/users-management.html',
+            'inventory': 'admin/sections/inventory-management.html',
+            'appointments': 'admin/sections/appointments-management.html',
+            'pets': 'admin/sections/pets-management.html',
+            'medical-records': 'admin/sections/medical-records.html',
+            'notifications': 'admin/sections/notifications-center.html',
+            'messaging': 'admin/sections/messaging-system.html',
+            'financial-reports': 'admin/sections/financial-reports.html',
+            'schedules': 'admin/sections/schedules-management.html',
+            'settings': 'admin/sections/settings.html'
+        }
+
+        template_path = section_templates.get(section_name)
+
+        if not template_path:
+            return jsonify({
+                'success': False,
+                'message': f'Sección {section_name} no encontrada'
+            }), 404
+
+        # Verificar si el template existe
+        try:
+            content = render_template(template_path)
+            return jsonify({
+                'success': True,
+                'content': content,
+                'section': section_name
+            })
+        except Exception as e:
+            # Si el template no existe, devolver placeholder
+            placeholder_content = f"""
+            <div style="text-align: center; padding: 60px 20px; color: #52B788;">
+                <h2 style="color: #2D6A4F; margin-bottom: 20px;">🔧 {section_name.replace('-', ' ').title()}</h2>
+                <p style="color: #52B788; font-size: 1.1rem;">Esta sección está en desarrollo...</p>
+                <p>Template: {template_path}</p>
+                <button onclick="navigateToSection('dashboard')" 
+                        style="background: #52B788; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                    Volver al Dashboard
+                </button>
+            </div>
+            """
+            return jsonify({
+                'success': True,
+                'content': placeholder_content,
+                'section': section_name,
+                'is_placeholder': True
+            })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500

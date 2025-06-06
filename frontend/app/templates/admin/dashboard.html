@@ -1051,46 +1051,69 @@
         }
 
         function navigateToSection(section) {
-            // Actualizar navegación activa
-            document.querySelectorAll('.menu-link').forEach(link => {
-                link.classList.remove('active');
-            });
+    console.log(`🔄 Navegando a sección: ${section}`);
 
-            const activeLink = document.querySelector(`[data-section="${section}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
+    // Actualizar navegación activa
+    document.querySelectorAll('.menu-link').forEach(link => {
+        link.classList.remove('active');
+    });
 
-            // Actualizar título de página
-            const pageTitles = {
-                'dashboard': 'Dashboard',
-                'users': 'Gestión de Usuarios',
-                'schedules': 'Horarios del Personal',
-                'appointments': 'Gestión de Citas',
-                'pets': 'Gestión de Mascotas',
-                'medical-records': 'Historias Clínicas',
-                'clients': 'Gestión de Clientes',
-                'inventory': 'Gestión de Inventario',
-                'inventory-alerts': 'Alertas de Inventario',
-                'inventory-reports': 'Reportes de Inventario',
-                'notifications': 'Centro de Notificaciones',
-                'messaging': 'Sistema de Mensajería',
-                'financial-reports': 'Reportes Financieros',
-                'analytics': 'Analíticas y Métricas',
-                'settings': 'Configuración del Sistema'
-            };
+    const activeLink = document.querySelector(`[data-section="${section}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
 
-            document.getElementById('pageTitle').textContent = pageTitles[section] || 'Dashboard';
+    // Actualizar título de página
+    const pageTitles = {
+        'dashboard': 'Dashboard',
+        'users': 'Gestión de Usuarios y Roles',
+        'schedules': 'Horarios del Personal',
+        'appointments': 'Gestión de Citas',
+        'pets': 'Gestión de Mascotas',
+        'medical-records': 'Historias Clínicas',
+        'clients': 'Gestión de Clientes',
+        'inventory': 'Gestión de Inventario',
+        'inventory-alerts': 'Alertas de Inventario',
+        'inventory-reports': 'Reportes de Inventario',
+        'notifications': 'Centro de Notificaciones',
+        'messaging': 'Sistema de Mensajería',
+        'financial-reports': 'Reportes Financieros',
+        'analytics': 'Analíticas y Métricas',
+        'settings': 'Configuración del Sistema'
+    };
 
-            // Cargar contenido de la sección
-            loadSectionContent(section);
-            currentSection = section;
+    document.getElementById('pageTitle').textContent = pageTitles[section] || 'Dashboard';
 
-            // Cerrar sidebar en móvil
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('active');
-            }
+    // Ocultar todas las secciones
+    document.querySelectorAll('.section-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Mostrar sección seleccionada
+    const targetSection = document.getElementById(`section-${section}`);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    // Cargar contenido si no se ha cargado antes O si es dashboard (siempre recargar)
+    if (!loadedSections.has(section) || section === 'dashboard') {
+        if (section === 'dashboard') {
+            // Para dashboard, recargar página para mostrar stats actualizados
+            location.reload();
+            return;
         }
+
+        loadSectionContent(section);
+        loadedSections.add(section);
+    }
+
+    currentSection = section;
+
+    // Cerrar sidebar en móvil
+    if (window.innerWidth <= 768) {
+        document.getElementById('sidebar').classList.remove('active');
+    }
+}
 
         async function loadDashboardData() {
             try {
@@ -1142,6 +1165,25 @@
                 notificationBadge.style.display = 'none';
             }
         }
+
+        function showSectionError(sectionElement, errorMessage) {
+    sectionElement.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: #dc3545;">
+            <h3 style="color: #dc3545; margin-bottom: 15px;">❌ ${errorMessage}</h3>
+            <p>No se pudo cargar el contenido de esta sección.</p>
+            <div style="margin-top: 20px;">
+                <button onclick="loadSectionContent('${currentSection}')"
+                        style="background: #52B788; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-right: 10px;">
+                    Reintentar
+                </button>
+                <button onclick="navigateToSection('dashboard')"
+                        style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+    `;
+}
 
         function loadRecentActivities() {
             const activityList = document.getElementById('activityList');
@@ -1227,57 +1269,57 @@
             // Implementar lógica de marcar como leída
         }
 
-        function loadSectionContent(section) {
-            const content = document.getElementById('dashboardContent');
+            async function loadSectionContent(section) {
+        const sectionElement = document.getElementById(`section-${section}`);
+        if (!sectionElement) return;
 
+        console.log(`📥 Cargando contenido para sección: ${section}`);
+
+        try {
             // Mostrar loading
-            content.innerHTML = `
+            sectionElement.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    Cargando ${section}...
+                    <span>Cargando ${section}...</span>
                 </div>
             `;
 
-            // Simular carga de contenido
-            setTimeout(() => {
-                if (section === 'dashboard') {
-                    location.reload();
-                    return;
+            // Intentar cargar desde el endpoint de sections
+            const response = await fetch(`/admin/section/${section}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                const sectionNames = {
-                    'users': '👥 Gestión de Usuarios',
-                    'schedules': '📅 Gestión de Horarios',
-                    'appointments': '📋 Gestión de Citas',
-                    'pets': '🐕 Gestión de Mascotas',
-                    'medical-records': '📄 Historias Clínicas',
-                    'clients': '👤 Gestión de Clientes',
-                    'inventory': '📦 Gestión de Inventario',
-                    'inventory-alerts': '⚠️ Alertas de Inventario',
-                    'inventory-reports': '📈 Reportes de Inventario',
-                    'notifications': '🔔 Centro de Notificaciones',
-                    'messaging': '💬 Sistema de Mensajería',
-                    'financial-reports': '💰 Reportes Financieros',
-                    'analytics': '📊 Analíticas y Métricas',
-                    'settings': '⚙️ Configuración del Sistema'
-                };
+            if (response.ok) {
+                const data = await response.json();
 
-                content.innerHTML = `
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <h2 style="color: #2D6A4F; margin-bottom: 20px;">${sectionNames[section] || 'Sección'}</h2>
-                        <p style="color: #52B788; font-size: 1.1rem;">Sección en desarrollo...</p>
-                        <p style="color: #52B788;">Esta funcionalidad estará disponible próximamente.</p>
-                        <div style="margin-top: 30px;">
-                            <button onclick="navigateToSection('dashboard')"
-                                    style="background: #52B788; color: white; border: none;
-                                           padding: 12px 24px; border-radius: 8px; cursor: pointer;">
-                                Volver al Dashboard
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }, 500);
+                if (data.success) {
+                    sectionElement.innerHTML = data.content;
+
+                    // Si es la sección de usuarios y tiene el template real, inicializar
+                    if (section === 'users' && !data.is_placeholder) {
+                        console.log('🎯 Sección de usuarios cargada desde template');
+                        // El template users-management.html ya tiene su propio JavaScript
+                        // que se ejecutará automáticamente
+                    } else if (data.is_placeholder) {
+                        console.log(`⚠️ Sección ${section} usando placeholder`);
+                    } else {
+                        console.log(`✅ Sección ${section} cargada desde template`);
+                    }
+                } else {
+                    throw new Error(data.message || 'Error cargando sección');
+                }
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+        } catch (error) {
+            console.error(`❌ Error cargando sección ${section}:`, error);
+            showSectionError(sectionElement, `Error cargando ${section}: ${error.message}`);
         }
+    }
 
         // UTILIDADES
         function formatCurrency(amount) {

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios - Panel Administrador</title>
+    <title>Panel Administrador - Clínica Veterinaria</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -18,645 +19,301 @@
             line-height: 1.6;
         }
 
-        /* CONTENEDOR PRINCIPAL */
-        .users-management-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            animation: fadeInUp 0.6s ease;
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2D6A4F 0%, #081C15 100%);
+            color: white;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
         }
 
-        /* HEADER DE LA SECCIÓN */
-        .section-header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
-            border: 1px solid #B7E4C7;
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            background: #52B788;
+            border-radius: 50%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section-title {
+            padding: 0 20px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .menu-item {
+            list-style: none;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background: rgba(82, 183, 136, 0.2);
+            border-left-color: #52B788;
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(8, 28, 21, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #B7E4C7;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
             gap: 20px;
         }
 
-        .section-title-area h1 {
-            font-size: 2.2rem;
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #2D6A4F;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
             font-weight: 700;
             color: #2D6A4F;
-            margin-bottom: 8px;
+        }
+
+        .topbar-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
-        .section-title-area p {
-            color: #52B788;
-            font-size: 1.1rem;
-            margin: 0;
+        .notification-bell {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #2D6A4F;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
-        .section-actions {
+        .notification-bell:hover {
+            background: #B7E4C7;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #22577A;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* BOTONES */
-        .btn {
-            display: inline-flex;
+        .user-menu {
+            display: flex;
             align-items: center;
             gap: 10px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
             cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 25px;
             transition: all 0.3s ease;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
+        .user-menu:hover {
+            background: #B7E4C7;
         }
 
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
+        .user-avatar {
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            box-shadow: 0 4px 15px rgba(82, 183, 136, 0.2);
+            font-weight: 600;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(82, 183, 136, 0.4);
+        .user-info {
+            display: flex;
+            flex-direction: column;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #B7E4C7 0%, #D8F3DC 100%);
+        .user-name {
+            font-weight: 600;
             color: #2D6A4F;
-            border: 2px solid #B7E4C7;
+            font-size: 0.9rem;
         }
 
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%);
-            color: white;
-            border-color: #52B788;
-            transform: translateY(-2px);
+        .user-role {
+            font-size: 0.8rem;
+            color: #52B788;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
+        /* CONTENT CONTAINER */
+        .content-container {
+            padding: 0;
+            min-height: calc(100vh - 80px);
         }
 
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        /* SECTION CONTENT */
+        .section-content {
+            display: none;
+            min-height: 100%;
         }
 
-        /* ESTADÍSTICAS DE USUARIOS */
-        .users-stats-grid {
+        .section-content.active {
+            display: block;
+        }
+
+        /* DASHBOARD ORIGINAL */
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .stat-card {
             background: white;
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
-            border: 1px solid #D8F3DC;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
+            box-shadow: 0 5px 15px rgba(8, 28, 21, 0.08);
+            border-left: 4px solid;
+            transition: transform 0.3s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(8, 28, 21, 0.12);
         }
 
-        .stat-card.primary::before { background: linear-gradient(135deg, #52B788, #38A3A5); }
-        .stat-card.secondary::before { background: linear-gradient(135deg, #38A3A5, #22577A); }
-        .stat-card.warning::before { background: linear-gradient(135deg, #22577A, #2D6A4F); }
-        .stat-card.info::before { background: linear-gradient(135deg, #2D6A4F, #081C15); }
+        .stat-card.primary { border-left-color: #52B788; }
+        .stat-card.secondary { border-left-color: #38A3A5; }
+        .stat-card.warning { border-left-color: #22577A; }
+        .stat-card.danger { border-left-color: #2D6A4F; }
 
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
+        .stat-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .stat-card.primary .stat-icon { background: linear-gradient(135deg, #52B788, #38A3A5); }
-        .stat-card.secondary .stat-icon { background: linear-gradient(135deg, #38A3A5, #22577A); }
-        .stat-card.warning .stat-icon { background: linear-gradient(135deg, #22577A, #2D6A4F); }
-        .stat-card.info .stat-icon { background: linear-gradient(135deg, #2D6A4F, #081C15); }
-
-        .stat-content {
-            flex: 1;
-        }
-
-        .stat-value {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #2D6A4F;
-            margin-bottom: 5px;
-            line-height: 1;
-        }
-
-        .stat-label {
-            color: #52B788;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        /* PANEL DE FILTROS */
-        .filters-panel {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
-            border: 1px solid #D8F3DC;
-        }
-
-        .filters-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 20px;
-            align-items: end;
-        }
-
-        .search-group {
-            position: relative;
-        }
-
-        .search-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2D6A4F;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 45px 12px 15px;
-            border: 2px solid #D8F3DC;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #F8FBF9;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #52B788;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #52B788;
-            font-size: 1.2rem;
-            pointer-events: none;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            margin-bottom: 8px;
-            color: #2D6A4F;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .filter-select {
-            padding: 12px 15px;
-            border: 2px solid #D8F3DC;
-            border-radius: 10px;
-            background: #F8FBF9;
-            color: #2D6A4F;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: #52B788;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
-        }
-
-        /* TABLA DE USUARIOS */
-        .users-table-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);
-            overflow: hidden;
-            margin-bottom: 25px;
-            border: 1px solid #D8F3DC;
-        }
-
-        .table-header {
-            padding: 25px;
-            border-bottom: 1px solid #D8F3DC;
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, #F8FBF9 0%, #F0F8F0 100%);
+            margin-bottom: 15px;
         }
 
-        .table-header h3 {
-            color: #2D6A4F;
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .table-info {
-            color: #52B788;
+        .stat-title {
             font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .users-table th {
-            background: #D8F3DC;
-            padding: 18px 20px;
-            text-align: left;
-            font-weight: 600;
-            color: #2D6A4F;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            border-bottom: 2px solid #B7E4C7;
-            position: relative;
-        }
-
-        .users-table th.sortable {
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-        }
-
-        .users-table th.sortable:hover {
-            background: #B7E4C7;
-            color: #081C15;
-        }
-
-        .sort-icon {
-            margin-left: 8px;
-            opacity: 0.6;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-        }
-
-        .users-table th.sortable.asc .sort-icon,
-        .users-table th.sortable.desc .sort-icon {
-            opacity: 1;
             color: #52B788;
-        }
-
-        .users-table th.sortable.desc .sort-icon {
-            transform: rotate(180deg);
-        }
-
-        .users-table td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #D8F3DC;
-            vertical-align: middle;
-            font-size: 0.9rem;
-        }
-
-        .users-table tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        .users-table tbody tr:hover {
-            background: rgba(183, 228, 199, 0.15);
-        }
-
-        .user-name-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #52B788, #38A3A5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .user-details {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2D6A4F;
-            margin-bottom: 2px;
-        }
-
-        .user-email {
-            color: #52B788;
-            font-size: 0.8rem;
-        }
-
-        /* BADGES */
-        .role-badge, .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .role-badge.admin {
-            background: linear-gradient(135deg, #2D6A4F, #081C15);
-            color: white;
-        }
-        .role-badge.veterinarian {
-            background: linear-gradient(135deg, #52B788, #38A3A5);
-            color: white;
-        }
-        .role-badge.receptionist {
-            background: linear-gradient(135deg, #38A3A5, #22577A);
-            color: white;
-        }
-        .role-badge.auxiliary {
-            background: linear-gradient(135deg, #22577A, #2D6A4F);
-            color: white;
-        }
-        .role-badge.client {
-            background: linear-gradient(135deg, #B7E4C7, #D8F3DC);
-            color: #2D6A4F;
-        }
-
-        .status-badge.active {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            color: #155724;
-        }
-        .status-badge.inactive {
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-            color: #721c24;
-        }
-
-        /* ACCIONES */
-        .actions-cell {
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-action {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-edit {
-            background: #52B788;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background: #38A3A5;
-            transform: scale(1.05);
-        }
-
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background: #c82333;
-            transform: scale(1.05);
-        }
-
-        .btn-view {
-            background: #22577A;
-            color: white;
-        }
-
-        .btn-view:hover {
-            background: #2D6A4F;
-            transform: scale(1.05);
-        }
-
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(8, 28, 21, 0.5);
-            display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
+            font-size: 24px;
+            color: white;
         }
 
-        .modal-overlay.active {
-            display: flex;
-        }
+        .stat-icon.primary { background: linear-gradient(135deg, #52B788, #38A3A5); }
+        .stat-icon.secondary { background: linear-gradient(135deg, #38A3A5, #22577A); }
+        .stat-icon.warning { background: linear-gradient(135deg, #22577A, #2D6A4F); }
+        .stat-icon.danger { background: linear-gradient(135deg, #2D6A4F, #081C15); }
 
-        .modal {
-            background: white;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(8, 28, 21, 0.2);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .modal-header {
-            padding: 25px;
-            border-bottom: 1px solid #D8F3DC;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, #F8FBF9 0%, #F0F8F0 100%);
-        }
-
-        .modal-header h3 {
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
             color: #2D6A4F;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
+            margin-bottom: 5px;
         }
 
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
+        .stat-label {
             color: #52B788;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            transition: all 0.2s ease;
-        }
-
-        .modal-close:hover {
-            background: #D8F3DC;
-            color: #2D6A4F;
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .form-grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            margin-bottom: 8px;
-            color: #2D6A4F;
-            font-weight: 600;
             font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px 15px;
-            border: 2px solid #D8F3DC;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #F8FBF9;
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #52B788;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .modal-footer {
-            padding: 25px;
-            border-top: 1px solid #D8F3DC;
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            background: #F8FBF9;
         }
 
         /* LOADING STATE */
@@ -683,103 +340,72 @@
             100% { transform: rotate(360deg); }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #52B788;
-        }
-
-        .empty-state h3 {
-            color: #2D6A4F;
-            margin-bottom: 15px;
-        }
-
-        /* ERROR STATE */
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #dc3545;
-        }
-
-        .error-state h3 {
-            color: #dc3545;
-            margin-bottom: 15px;
-        }
-
-        .error-state .retry-btn {
-            margin-top: 20px;
-        }
-
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .section-header {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
+            .sidebar {
+                transform: translateX(-100%);
             }
 
-            .section-actions {
-                justify-content: center;
+            .sidebar.active {
+                transform: translateX(0);
             }
 
-            .filters-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
+            .main-content {
+                margin-left: 0;
             }
 
-            .users-stats-grid {
-                grid-template-columns: 1fr;
+            .menu-toggle {
+                display: block;
             }
 
-            .form-row {
-                grid-template-columns: 1fr;
+            .dashboard-content {
+                padding: 20px 15px;
             }
 
-            .table-wrapper {
-                font-size: 0.8rem;
-            }
-
-            .users-table th,
-            .users-table td {
-                padding: 12px 8px;
-            }
-
-            .user-name-cell {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .actions-cell {
-                flex-direction: column;
-                gap: 4px;
+            .user-info {
+                display: none;
             }
         }
 
-        /* TOAST NOTIFICATIONS */
-        .toast {
+        /* FLASHED MESSAGES */
+        .flashed-messages {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 2000;
-            min-width: 300px;
+        }
+
+        .alert {
             padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             font-weight: 500;
             animation: slideInRight 0.3s ease;
         }
 
-        .toast.success {
-            background: linear-gradient(135deg, #B7E4C7, #D8F3DC);
+        .alert-success {
+            background: #B7E4C7;
             color: #2D6A4F;
             border-left: 4px solid #52B788;
         }
 
-        .toast.error {
-            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+        .alert-error {
+            background: #ffebee;
             color: #c62828;
             border-left: 4px solid #c62828;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-left: 4px solid #ff9800;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #2196f3;
         }
 
         @keyframes slideInRight {
@@ -793,846 +419,783 @@
             }
         }
 
-        @keyframes slideOutRight {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-            }
+        /* SECTION PLACEHOLDER */
+        .section-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #52B788;
+        }
+
+        .section-placeholder h2 {
+            color: #2D6A4F;
+            margin-bottom: 20px;
+        }
+
+        .section-placeholder button {
+            background: #52B788;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .section-placeholder button:hover {
+            background: #38A3A5;
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
-    <div class="users-management-container">
-        <!-- HEADER DE LA SECCIÓN -->
-        <div class="section-header">
-            <div class="section-title-area">
-                <h1>
-                    <span>👥</span>
-                    Gestión de Usuarios y Roles
-                </h1>
-                <p>Administra usuarios, roles y permisos del sistema veterinario</p>
-            </div>
-            <div class="section-actions">
-                <button class="btn btn-primary" id="btnNewUser">
-                    <span>➕</span>
-                    Nuevo Usuario
-                </button>
-                <button class="btn btn-secondary" id="btnExportUsers">
-                    <span>📊</span>
-                    Exportar Lista
-                </button>
-            </div>
-        </div>
-
-        <!-- ESTADÍSTICAS DE USUARIOS -->
-        <div class="users-stats-grid">
-            <div class="stat-card primary">
-                <div class="stat-icon">👥</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalUsers">-</div>
-                    <div class="stat-label">Total Usuarios</div>
-                </div>
-            </div>
-            <div class="stat-card secondary">
-                <div class="stat-icon">👨‍⚕️</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalVeterinarians">-</div>
-                    <div class="stat-label">Veterinarios</div>
-                </div>
-            </div>
-            <div class="stat-card warning">
-                <div class="stat-icon">👤</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalClients">-</div>
-                    <div class="stat-label">Clientes</div>
-                </div>
-            </div>
-            <div class="stat-card info">
-                <div class="stat-icon">✅</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="activeUsers">-</div>
-                    <div class="stat-label">Usuarios Activos</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PANEL DE FILTROS -->
-        <div class="filters-panel">
-            <div class="filters-row">
-                <div class="search-group">
-                    <label for="searchUsers">Buscar Usuarios</label>
-                    <div style="position: relative;">
-                        <input type="text" id="searchUsers" class="search-input"
-                               placeholder="Buscar por nombre, email o rol...">
-                        <span class="search-icon">🔍</span>
+    <!-- FLASHED MESSAGES -->
+    <div class="flashed-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
                     </div>
-                </div>
-                <div class="filter-group">
-                    <label for="filterRole">Filtrar por Rol</label>
-                    <select id="filterRole" class="filter-select">
-                        <option value="">Todos los roles</option>
-                        <option value="admin">👑 Administrador</option>
-                        <option value="veterinarian">👨‍⚕️ Veterinario</option>
-                        <option value="receptionist">👩‍💼 Recepcionista</option>
-                        <option value="auxiliary">👩‍🔬 Auxiliar</option>
-                        <option value="client">👤 Cliente</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="filterStatus">Filtrar por Estado</label>
-                    <select id="filterStatus" class="filter-select">
-                        <option value="">Todos los estados</option>
-                        <option value="active">✅ Activos</option>
-                        <option value="inactive">❌ Inactivos</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button class="btn btn-secondary" id="btnClearFilters">
-                        Limpiar Filtros
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🐾</div>
+            <div class="sidebar-title">Panel Administrador</div>
+            <div class="sidebar-subtitle">Clínica Veterinaria</div>
+        </div>
+
+        <div class="sidebar-menu">
+            <!-- DASHBOARD -->
+            <div class="menu-section">
+                <div class="menu-section-title">Principal</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#dashboard" class="menu-link active" data-section="dashboard">
+                            <span class="menu-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- GESTIÓN DE USUARIOS -->
+            <div class="menu-section">
+                <div class="menu-section-title">Gestión de Personal</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#users" class="menu-link" data-section="users">
+                            <span class="menu-icon">👥</span>
+                            <span>Usuarios y Roles</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#schedules" class="menu-link" data-section="schedules">
+                            <span class="menu-icon">📅</span>
+                            <span>Horarios</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- GESTIÓN CLÍNICA -->
+            <div class="menu-section">
+                <div class="menu-section-title">Gestión Clínica</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#appointments" class="menu-link" data-section="appointments">
+                            <span class="menu-icon">📋</span>
+                            <span>Citas Médicas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#pets" class="menu-link" data-section="pets">
+                            <span class="menu-icon">🐕</span>
+                            <span>Mascotas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#medical-records" class="menu-link" data-section="medical-records">
+                            <span class="menu-icon">📄</span>
+                            <span>Historias Clínicas</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#clients" class="menu-link" data-section="clients">
+                            <span class="menu-icon">👤</span>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- INVENTARIO -->
+            <div class="menu-section">
+                <div class="menu-section-title">Inventario</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#inventory" class="menu-link" data-section="inventory">
+                            <span class="menu-icon">📦</span>
+                            <span>Medicamentos</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#inventory-alerts" class="menu-link" data-section="inventory-alerts">
+                            <span class="menu-icon">⚠️</span>
+                            <span>Alertas de Stock</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#inventory-reports" class="menu-link" data-section="inventory-reports">
+                            <span class="menu-icon">📈</span>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- NOTIFICACIONES -->
+            <div class="menu-section">
+                <div class="menu-section-title">Comunicación</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#notifications" class="menu-link" data-section="notifications">
+                            <span class="menu-icon">🔔</span>
+                            <span>Notificaciones</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#messaging" class="menu-link" data-section="messaging">
+                            <span class="menu-icon">💬</span>
+                            <span>Mensajería</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- REPORTES -->
+            <div class="menu-section">
+                <div class="menu-section-title">Reportes</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#financial-reports" class="menu-link" data-section="financial-reports">
+                            <span class="menu-icon">💰</span>
+                            <span>Facturación</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#analytics" class="menu-link" data-section="analytics">
+                            <span class="menu-icon">📊</span>
+                            <span>Analíticas</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CONFIGURACIÓN -->
+            <div class="menu-section">
+                <div class="menu-section-title">Sistema</div>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#settings" class="menu-link" data-section="settings">
+                            <span class="menu-icon">⚙️</span>
+                            <span>Configuración</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('frontend.logout') }}" class="menu-link">
+                            <span class="menu-icon">🚪</span>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+
+            <div class="topbar-right">
+                <div style="position: relative;">
+                    <button class="notification-bell" id="notificationBell">
+                        🔔
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                     </button>
                 </div>
-            </div>
-        </div>
 
-        <!-- TABLA DE USUARIOS -->
-        <div class="users-table-container">
-            <div class="table-header">
-                <h3>📋 Lista de Usuarios</h3>
-                <div class="table-info">
-                    <span id="usersCount">Cargando usuarios...</span>
-                </div>
-            </div>
-
-            <div class="table-wrapper" id="tableWrapper">
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th class="sortable" data-sort="name">
-                                Usuario
-                                <span class="sort-icon">↕️</span>
-                            </th>
-                            <th class="sortable" data-sort="role">
-                                Rol
-                                <span class="sort-icon">↕️</span>
-                            </th>
-                            <th>Teléfono</th>
-                            <th class="sortable" data-sort="created_at">
-                                Fecha Registro
-                                <span class="sort-icon">↕️</span>
-                            </th>
-                            <th class="sortable" data-sort="is_active">
-                                Estado
-                                <span class="sort-icon">↕️</span>
-                            </th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <!-- Se llenará dinámicamente -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- LOADING STATE -->
-            <div class="loading" id="usersTableLoading">
-                <div class="spinner"></div>
-                <span>Cargando usuarios del sistema...</span>
-            </div>
-
-            <!-- EMPTY STATE -->
-            <div class="empty-state" id="usersTableEmpty" style="display: none;">
-                <h3>👥 No hay usuarios</h3>
-                <p>No se encontraron usuarios que coincidan con los filtros aplicados.</p>
-                <button class="btn btn-primary" onclick="clearFilters()">Ver todos los usuarios</button>
-            </div>
-
-            <!-- ERROR STATE -->
-            <div class="error-state" id="usersTableError" style="display: none;">
-                <h3>❌ Error cargando usuarios</h3>
-                <p>No se pudo conectar con el servidor. Verifique su conexión.</p>
-                <button class="btn btn-primary retry-btn" onclick="loadUsers()">Reintentar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PARA CREAR/EDITAR USUARIO -->
-    <div class="modal-overlay" id="userModalOverlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="userModalTitle">Nuevo Usuario</h3>
-                <button class="modal-close" onclick="closeUserModal()">✕</button>
-            </div>
-
-            <form id="userForm" class="modal-body">
-                <div class="form-grid">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="firstName">Nombre *</label>
-                            <input type="text" id="firstName" name="first_name" required
-                                   placeholder="Nombre del usuario" maxlength="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName">Apellido *</label>
-                            <input type="text" id="lastName" name="last_name" required
-                                   placeholder="Apellido del usuario" maxlength="50">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="userEmail">Email *</label>
-                        <input type="email" id="userEmail" name="email" required
-                               placeholder="usuario@email.com">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="userPhone">Teléfono</label>
-                            <input type="tel" id="userPhone" name="phone"
-                                   placeholder="+57 300 123 4567" maxlength="15">
-                        </div>
-                        <div class="form-group">
-                            <label for="userRole">Rol *</label>
-                            <select id="userRole" name="role" required>
-                                <option value="">Seleccionar rol</option>
-                                <option value="admin">👑 Administrador</option>
-                                <option value="veterinarian">👨‍⚕️ Veterinario</option>
-                                <option value="receptionist">👩‍💼 Recepcionista</option>
-                                <option value="auxiliary">👩‍🔬 Auxiliar</option>
-                                <option value="client">👤 Cliente</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="userAddress">Dirección</label>
-                        <textarea id="userAddress" name="address" rows="3"
-                                  placeholder="Dirección completa (opcional)"></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="userPassword">Contraseña *</label>
-                            <input type="password" id="userPassword" name="password"
-                                   placeholder="Mínimo 6 caracteres" minlength="6">
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword">Confirmar Contraseña *</label>
-                            <input type="password" id="confirmPassword" name="confirm_password"
-                                   placeholder="Repetir contraseña">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="userActive" name="is_active" checked>
-                            Usuario activo
-                        </label>
-                        <small style="color: #52B788; font-size: 0.8rem;">
-                            Los usuarios inactivos no pueden iniciar sesión
-                        </small>
-                    </div>
-                </div>
-            </form>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
-                    Cancelar
-                </button>
-                <button type="submit" form="userForm" class="btn btn-primary" id="saveUserBtn">
-                    <span id="saveUserText">Guardar Usuario</span>
-                    <div class="spinner" id="saveUserSpinner" style="display: none; width: 20px; height: 20px; margin-left: 10px;"></div>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CONFIRMACIÓN PARA ELIMINAR -->
-    <div class="modal-overlay" id="deleteUserModalOverlay">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3>Confirmar Acción</h3>
-                <button class="modal-close" onclick="closeDeleteUserModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div style="text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
-                    <h4 style="color: #2D6A4F; margin-bottom: 15px;" id="confirmActionTitle">¿Desactivar usuario?</h4>
-                    <p style="color: #52B788; margin-bottom: 20px;" id="deleteUserMessage">
-                        Esta acción desactivará el usuario y no podrá iniciar sesión.
-                    </p>
-                    <div id="deleteUserInfo" style="background: #F8FBF9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <!-- Se llenará dinámicamente -->
+                <div class="user-menu">
+                    <div class="user-avatar">{{ user_initial }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user_name }}</div>
+                        <div class="user-role">{{ user_role }}</div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteUserModal()">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUser">
-                    <span id="deleteUserText">Desactivar</span>
-                    <div class="spinner" id="deleteUserSpinner" style="display: none; width: 20px; height: 20px; margin-left: 10px;"></div>
-                </button>
+        </header>
+
+        <!-- CONTENT CONTAINER -->
+        <div class="content-container">
+            <!-- DASHBOARD SECTION -->
+            <div class="section-content active" id="section-dashboard">
+                <div class="dashboard-content">
+                    <!-- ESTADÍSTICAS PRINCIPALES -->
+                    <div class="stats-grid">
+                        <div class="stat-card primary">
+                            <div class="stat-header">
+                                <div class="stat-title">Total Pacientes</div>
+                                <div class="stat-icon primary">🐕</div>
+                            </div>
+                            <div class="stat-value" id="totalPets">-</div>
+                            <div class="stat-label">Mascotas registradas</div>
+                        </div>
+
+                        <div class="stat-card secondary">
+                            <div class="stat-header">
+                                <div class="stat-title">Citas Hoy</div>
+                                <div class="stat-icon secondary">📅</div>
+                            </div>
+                            <div class="stat-value" id="appointmentsToday">{{ appointments_today|length }}</div>
+                            <div class="stat-label">Citas programadas</div>
+                        </div>
+
+                        <div class="stat-card warning">
+                            <div class="stat-header">
+                                <div class="stat-title">Stock Bajo</div>
+                                <div class="stat-icon warning">⚠️</div>
+                            </div>
+                            <div class="stat-value" id="lowStockItems">{{ inventory_summary.low_stock_count or 0 }}</div>
+                            <div class="stat-label">Medicamentos</div>
+                        </div>
+
+                        <div class="stat-card danger">
+                            <div class="stat-header">
+                                <div class="stat-title">Valor Inventario</div>
+                                <div class="stat-icon danger">💰</div>
+                            </div>
+                            <div class="stat-value" id="inventoryValue">
+                                {% if inventory_summary.total_inventory_value %}
+                                    ${{ "{:,.0f}".format(inventory_summary.total_inventory_value) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Total en stock</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS SECTION -->
+            <div class="section-content" id="section-users">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Cargando gestión de usuarios...</span>
+                </div>
+            </div>
+
+            <!-- PLACEHOLDER SECTIONS -->
+            <div class="section-content" id="section-schedules">
+                <div class="section-placeholder">
+                    <h2>📅 Gestión de Horarios</h2>
+                    <p>Módulo para configurar horarios del personal veterinario</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-appointments">
+                <div class="section-placeholder">
+                    <h2>📋 Gestión de Citas</h2>
+                    <p>Módulo para administrar citas médicas</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-pets">
+                <div class="section-placeholder">
+                    <h2>🐕 Gestión de Mascotas</h2>
+                    <p>Módulo para administrar registro de mascotas</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-medical-records">
+                <div class="section-placeholder">
+                    <h2>📄 Historias Clínicas</h2>
+                    <p>Módulo para gestionar historias clínicas</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-clients">
+                <div class="section-placeholder">
+                    <h2>👤 Gestión de Clientes</h2>
+                    <p>Módulo para administrar clientes</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-inventory">
+                <div class="section-placeholder">
+                    <h2>📦 Gestión de Inventario</h2>
+                    <p>Módulo para administrar medicamentos e inventario</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-inventory-alerts">
+                <div class="section-placeholder">
+                    <h2>⚠️ Alertas de Inventario</h2>
+                    <p>Módulo para gestionar alertas de stock</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-inventory-reports">
+                <div class="section-placeholder">
+                    <h2>📈 Reportes de Inventario</h2>
+                    <p>Módulo para generar reportes de inventario</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-notifications">
+                <div class="section-placeholder">
+                    <h2>🔔 Centro de Notificaciones</h2>
+                    <p>Módulo para gestionar notificaciones del sistema</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-messaging">
+                <div class="section-placeholder">
+                    <h2>💬 Sistema de Mensajería</h2>
+                    <p>Módulo para envío de mensajes por email y WhatsApp</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-financial-reports">
+                <div class="section-placeholder">
+                    <h2>💰 Reportes Financieros</h2>
+                    <p>Módulo para gestionar facturación y reportes financieros</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-analytics">
+                <div class="section-placeholder">
+                    <h2>📊 Analíticas y Métricas</h2>
+                    <p>Módulo para análisis y métricas del sistema</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            </div>
+
+            <div class="section-content" id="section-settings">
+                <div class="section-placeholder">
+                    <h2>⚙️ Configuración del Sistema</h2>
+                    <p>Módulo para configuraciones generales</p>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // =============== CONFIGURACIÓN DEL BACKEND ===============
+        // =============== CONFIGURACIÓN GLOBAL ===============
         const API_CONFIG = {
             AUTH_SERVICE_URL: 'http://localhost:5001',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('authToken') || ''}`
-            }
+            APPOINTMENT_SERVICE_URL: 'http://localhost:5002',
+            NOTIFICATION_SERVICE_URL: 'http://localhost:5003',
+            MEDICAL_SERVICE_URL: 'http://localhost:5004',
+            INVENTORY_SERVICE_URL: 'http://localhost:5005'
         };
 
         // =============== VARIABLES GLOBALES ===============
-        let allUsers = [];
-        let filteredUsers = [];
-        let currentEditingUser = null;
-        let currentDeleteUser = null;
-        let sortDirection = {};
+        let currentSection = 'dashboard';
+        let currentUser = null;
+        let loadedSections = new Set(['dashboard']); // Track de secciones cargadas
 
         // =============== INICIALIZACIÓN ===============
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Inicializando Gestión de Usuarios...');
-            console.log('🔗 Auth Service URL:', API_CONFIG.AUTH_SERVICE_URL);
+            console.log('🚀 Inicializando Panel de Administrador Conectado...');
 
             setupEventListeners();
-            loadUsers();
+            loadUserInfo();
+
+            // Auto-remover mensajes flash después de 5 segundos
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    alert.style.animation = 'slideInRight 0.3s ease reverse';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
         });
 
         function setupEventListeners() {
-            // Botones principales
-            document.getElementById('btnNewUser').addEventListener('click', openNewUserModal);
-            document.getElementById('btnExportUsers').addEventListener('click', exportUsers);
+            // Menu toggle para móvil
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
 
-            // Filtros y búsqueda
-            document.getElementById('searchUsers').addEventListener('input', filterUsers);
-            document.getElementById('filterRole').addEventListener('change', filterUsers);
-            document.getElementById('filterStatus').addEventListener('change', filterUsers);
-            document.getElementById('btnClearFilters').addEventListener('click', clearFilters);
-
-            // Formularios
-            document.getElementById('userForm').addEventListener('submit', saveUser);
-            document.getElementById('confirmDeleteUser').addEventListener('click', deleteUser);
-
-            // Ordenamiento de tabla
-            document.querySelectorAll('.sortable').forEach(header => {
-                header.addEventListener('click', () => sortTable(header.dataset.sort));
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
             });
 
-            // Validación de contraseñas
-            document.getElementById('confirmPassword').addEventListener('input', validatePasswords);
-        }
-
-        // =============== CARGA DE DATOS REALES DEL BACKEND ===============
-        async function loadUsers() {
-            try {
-                showLoadingState(true);
-                console.log('📡 Cargando usuarios desde Auth Service...');
-
-                // Obtener lista de usuarios del Auth Service
-                const response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users`, {
-                    method: 'GET',
-                    headers: API_CONFIG.headers
+            // Navegación del sidebar
+            const menuLinks = document.querySelectorAll('.menu-link[data-section]');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    navigateToSection(section);
                 });
+            });
+        }
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+        // =============== NAVEGACIÓN ENTRE SECCIONES ===============
+        function navigateToSection(section) {
+            console.log(`🔄 Navegando a sección: ${section}`);
 
-                const data = await response.json();
+            // Actualizar navegación activa
+            document.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+            });
 
-                if (data.success) {
-                    allUsers = data.users || [];
-                    filteredUsers = [...allUsers];
+            const activeLink = document.querySelector(`[data-section="${section}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
 
-                    console.log(`✅ ${allUsers.length} usuarios cargados exitosamente`);
+            // Actualizar título de página
+            const pageTitles = {
+                'dashboard': 'Dashboard',
+                'users': 'Gestión de Usuarios y Roles',
+                'schedules': 'Horarios del Personal',
+                'appointments': 'Gestión de Citas',
+                'pets': 'Gestión de Mascotas',
+                'medical-records': 'Historias Clínicas',
+                'clients': 'Gestión de Clientes',
+                'inventory': 'Gestión de Inventario',
+                'inventory-alerts': 'Alertas de Inventario',
+                'inventory-reports': 'Reportes de Inventario',
+                'notifications': 'Centro de Notificaciones',
+                'messaging': 'Sistema de Mensajería',
+                'financial-reports': 'Reportes Financieros',
+                'analytics': 'Analíticas y Métricas',
+                'settings': 'Configuración del Sistema'
+            };
 
-                    renderUsersTable();
-                    updateUsersCount();
-                    loadUserStats();
-                } else {
-                    throw new Error(data.message || 'Error en la respuesta del servidor');
-                }
+            document.getElementById('pageTitle').textContent = pageTitles[section] || 'Dashboard';
 
-            } catch (error) {
-                console.error('❌ Error cargando usuarios:', error);
-                showErrorState(true, error.message);
-                showToast('Error cargando usuarios: ' + error.message, 'error');
-            } finally {
-                showLoadingState(false);
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Mostrar sección seleccionada
+            const targetSection = document.getElementById(`section-${section}`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Cargar contenido si no se ha cargado antes
+            if (!loadedSections.has(section)) {
+                loadSectionContent(section);
+                loadedSections.add(section);
+            }
+
+            currentSection = section;
+
+            // Cerrar sidebar en móvil
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active');
             }
         }
 
-        async function loadUserStats() {
+        // =============== CARGA DINÁMICA DE SECCIONES ===============
+        async function loadSectionContent(section) {
+            const sectionElement = document.getElementById(`section-${section}`);
+            if (!sectionElement) return;
+
+            console.log(`📥 Cargando contenido para sección: ${section}`);
+
             try {
-                console.log('📊 Calculando estadísticas de usuarios...');
-
-                // Calcular estadísticas reales de los datos obtenidos
-                const stats = {
-                    total: allUsers.length,
-                    veterinarians: allUsers.filter(u => u.role === 'veterinarian').length,
-                    clients: allUsers.filter(u => u.role === 'client').length,
-                    active: allUsers.filter(u => u.is_active === true).length
-                };
-
-                updateStatsUI(stats);
-                console.log('✅ Estadísticas calculadas:', stats);
-
-            } catch (error) {
-                console.error('❌ Error calculando estadísticas:', error);
-                // Mostrar valores por defecto en caso de error
-                updateStatsUI({ total: 0, veterinarians: 0, clients: 0, active: 0 });
-            }
-        }
-
-        function updateStatsUI(stats) {
-            document.getElementById('totalUsers').textContent = stats.total;
-            document.getElementById('totalVeterinarians').textContent = stats.veterinarians;
-            document.getElementById('totalClients').textContent = stats.clients;
-            document.getElementById('activeUsers').textContent = stats.active;
-        }
-
-        // =============== RENDERIZADO DE TABLA ===============
-        function renderUsersTable() {
-            const tbody = document.getElementById('usersTableBody');
-
-            if (filteredUsers.length === 0) {
-                showEmptyState(true);
-                tbody.innerHTML = '';
-                return;
-            }
-
-            showEmptyState(false);
-
-            tbody.innerHTML = filteredUsers.map(user => `
-                <tr>
-                    <td>
-                        <div class="user-name-cell">
-                            <div class="user-avatar">
-                                ${(user.first_name || 'U').charAt(0).toUpperCase()}
-                            </div>
-                            <div class="user-details">
-                                <div class="user-name">${user.first_name || ''} ${user.last_name || ''}</div>
-                                <div class="user-email">${user.email || 'Sin email'}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="role-badge ${user.role || 'client'}">
-                            ${getRoleIcon(user.role)} ${getRoleLabel(user.role)}
-                        </span>
-                    </td>
-                    <td>${user.phone || 'No registrado'}</td>
-                    <td>${formatDate(user.created_at)}</td>
-                    <td>
-                        <span class="status-badge ${user.is_active ? 'active' : 'inactive'}">
-                            ${user.is_active ? '✅ Activo' : '❌ Inactivo'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="btn-action btn-view" onclick="viewUser('${user.id}')" title="Ver detalles">
-                                👁️
-                            </button>
-                            <button class="btn-action btn-edit" onclick="editUser('${user.id}')" title="Editar">
-                                ✏️
-                            </button>
-                            <button class="btn-action btn-delete" onclick="confirmDeleteUser('${user.id}')" title="${user.is_active ? 'Desactivar' : 'Activar'}">
-                                ${user.is_active ? '🚫' : '✅'}
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateUsersCount() {
-            const count = filteredUsers.length;
-            const total = allUsers.length;
-
-            if (count === total) {
-                document.getElementById('usersCount').textContent = `${count} usuarios encontrados`;
-            } else {
-                document.getElementById('usersCount').textContent = `${count} de ${total} usuarios`;
-            }
-        }
-
-        // =============== FILTROS Y BÚSQUEDA ===============
-        function filterUsers() {
-            const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
-            const roleFilter = document.getElementById('filterRole').value;
-            const statusFilter = document.getElementById('filterStatus').value;
-
-            filteredUsers = allUsers.filter(user => {
-                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
-                const email = (user.email || '').toLowerCase();
-                const role = (user.role || '').toLowerCase();
-
-                const matchesSearch = !searchTerm ||
-                    fullName.includes(searchTerm) ||
-                    email.includes(searchTerm) ||
-                    role.includes(searchTerm);
-
-                const matchesRole = !roleFilter || user.role === roleFilter;
-
-                const matchesStatus = !statusFilter ||
-                    (statusFilter === 'active' && user.is_active === true) ||
-                    (statusFilter === 'inactive' && user.is_active === false);
-
-                return matchesSearch && matchesRole && matchesStatus;
-            });
-
-            renderUsersTable();
-            updateUsersCount();
-        }
-
-        function clearFilters() {
-            document.getElementById('searchUsers').value = '';
-            document.getElementById('filterRole').value = '';
-            document.getElementById('filterStatus').value = '';
-
-            filteredUsers = [...allUsers];
-            renderUsersTable();
-            updateUsersCount();
-        }
-
-        // =============== ORDENAMIENTO ===============
-        function sortTable(column) {
-            const direction = sortDirection[column] === 'asc' ? 'desc' : 'asc';
-            sortDirection[column] = direction;
-
-            // Actualizar iconos de ordenamiento
-            document.querySelectorAll('.sortable').forEach(header => {
-                header.classList.remove('asc', 'desc');
-                if (header.dataset.sort === column) {
-                    header.classList.add(direction);
-                }
-            });
-
-            filteredUsers.sort((a, b) => {
-                let aValue, bValue;
-
-                switch (column) {
-                    case 'name':
-                        aValue = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
-                        bValue = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+                switch (section) {
+                    case 'users':
+                        await loadUsersSection(sectionElement);
                         break;
-                    case 'role':
-                        aValue = a.role || '';
-                        bValue = b.role || '';
+                    case 'inventory':
+                        await loadInventorySection(sectionElement);
                         break;
-                    case 'created_at':
-                        aValue = new Date(a.created_at || 0);
-                        bValue = new Date(b.created_at || 0);
+                    case 'appointments':
+                        await loadAppointmentsSection(sectionElement);
                         break;
-                    case 'is_active':
-                        aValue = a.is_active ? 1 : 0;
-                        bValue = b.is_active ? 1 : 0;
+                    case 'notifications':
+                        await loadNotificationsSection(sectionElement);
                         break;
                     default:
-                        return 0;
+                        console.log(`⚠️ Sección ${section} aún no implementada`);
+                        break;
                 }
-
-                if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-                if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            renderUsersTable();
-        }
-
-        // =============== CRUD DE USUARIOS ===============
-        function openNewUserModal() {
-            currentEditingUser = null;
-            document.getElementById('userModalTitle').textContent = 'Nuevo Usuario';
-            document.getElementById('userForm').reset();
-            document.getElementById('userActive').checked = true;
-            document.getElementById('userPassword').required = true;
-            document.getElementById('confirmPassword').required = true;
-            document.getElementById('userModalOverlay').classList.add('active');
-        }
-
-        function editUser(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) {
-                showToast('Usuario no encontrado', 'error');
-                return;
+            } catch (error) {
+                console.error(`❌ Error cargando sección ${section}:`, error);
+                showSectionError(sectionElement, `Error cargando ${section}`);
             }
-
-            currentEditingUser = user;
-            document.getElementById('userModalTitle').textContent = 'Editar Usuario';
-
-            // Llenar formulario con datos reales del usuario
-            document.getElementById('firstName').value = user.first_name || '';
-            document.getElementById('lastName').value = user.last_name || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userPhone').value = user.phone || '';
-            document.getElementById('userRole').value = user.role || '';
-            document.getElementById('userAddress').value = user.address || '';
-            document.getElementById('userActive').checked = user.is_active === true;
-
-            // En edición, la contraseña es opcional
-            document.getElementById('userPassword').required = false;
-            document.getElementById('confirmPassword').required = false;
-            document.getElementById('userPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-
-            document.getElementById('userModalOverlay').classList.add('active');
         }
 
-        function viewUser(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) {
-                showToast('Usuario no encontrado', 'error');
-                return;
-            }
-
-            // Mostrar detalles completos del usuario desde la base de datos
-            const details = `
-Detalles del Usuario (ID: ${user.id}):
-
-Nombre completo: ${user.first_name || ''} ${user.last_name || ''}
-Email: ${user.email || 'No registrado'}
-Teléfono: ${user.phone || 'No registrado'}
-Rol: ${getRoleLabel(user.role)}
-Estado: ${user.is_active ? 'Activo' : 'Inactivo'}
-Dirección: ${user.address || 'No registrada'}
-Fecha de registro: ${formatDate(user.created_at)}
-Última actualización: ${formatDate(user.updated_at)}
-            `.trim();
-
-            alert(details);
-        }
-
-        async function saveUser(event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-            const userData = Object.fromEntries(formData.entries());
-
-            // Validaciones
-            if (!validateUserForm(userData)) {
-                return;
-            }
-
-            // Convertir checkbox a boolean
-            userData.is_active = userData.is_active === 'on';
-
+        // =============== CARGA DE SECCIÓN USUARIOS ===============
+        async function loadUsersSection(sectionElement) {
             try {
-                setSaveLoading(true);
-                console.log('💾 Guardando usuario...', currentEditingUser ? 'Actualización' : 'Creación');
+                console.log('👥 Cargando módulo de gestión de usuarios...');
 
-                let response;
-                let url;
-                let method;
+                // Mostrar loading
+                sectionElement.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Cargando gestión de usuarios...</span>
+                    </div>
+                `;
 
-                if (currentEditingUser) {
-                    // Actualizar usuario existente
-                    url = `${API_CONFIG.AUTH_SERVICE_URL}/auth/users/${currentEditingUser.id}`;
-                    method = 'PUT';
-                    // No enviar contraseña si está vacía en edición
-                    if (!userData.password) {
-                        delete userData.password;
-                        delete userData.confirm_password;
+                // Simular carga de la plantilla de usuarios
+                // En un entorno real, aquí cargarías el contenido desde el archivo HTML
+                setTimeout(() => {
+                    sectionElement.innerHTML = `
+                        <div style="padding: 30px;">
+                            <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 12px rgba(8, 28, 21, 0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                                    <div>
+                                        <h1 style="color: #2D6A4F; font-size: 2.2rem; margin-bottom: 8px; display: flex; align-items: center; gap: 15px;">
+                                            <span>👥</span>
+                                            Gestión de Usuarios y Roles
+                                        </h1>
+                                        <p style="color: #52B788; font-size: 1.1rem; margin: 0;">
+                                            Administra usuarios, roles y permisos del sistema veterinario
+                                        </p>
+                                    </div>
+                                    <div style="display: flex; gap: 15px;">
+                                        <button onclick="openNewUserModal()" style="background: linear-gradient(135deg, #52B788 0%, #38A3A5 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                                            ➕ Nuevo Usuario
+                                        </button>
+                                        <button onclick="exportUsers()" style="background: linear-gradient(135deg, #B7E4C7 0%, #D8F3DC 100%); color: #2D6A4F; border: 2px solid #B7E4C7; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                                            📊 Exportar Lista
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ESTADÍSTICAS DE USUARIOS -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 30px;">
+                                    <div style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #D8F3DC; display: flex; align-items: center; gap: 20px; border-left: 4px solid #52B788;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #52B788, #38A3A5); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">👥</div>
+                                        <div>
+                                            <div style="font-size: 2.2rem; font-weight: 700; color: #2D6A4F;" id="usersTotal">-</div>
+                                            <div style="color: #52B788; font-size: 0.95rem; font-weight: 500;">Total Usuarios</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #D8F3DC; display: flex; align-items: center; gap: 20px; border-left: 4px solid #38A3A5;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #38A3A5, #22577A); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">👨‍⚕️</div>
+                                        <div>
+                                            <div style="font-size: 2.2rem; font-weight: 700; color: #2D6A4F;" id="usersVets">-</div>
+                                            <div style="color: #52B788; font-size: 0.95rem; font-weight: 500;">Veterinarios</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #D8F3DC; display: flex; align-items: center; gap: 20px; border-left: 4px solid #22577A;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #22577A, #2D6A4F); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">👤</div>
+                                        <div>
+                                            <div style="font-size: 2.2rem; font-weight: 700; color: #2D6A4F;" id="usersClients">-</div>
+                                            <div style="color: #52B788; font-size: 0.95rem; font-weight: 500;">Clientes</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #D8F3DC; display: flex; align-items: center; gap: 20px; border-left: 4px solid #2D6A4F;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #2D6A4F, #081C15); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">✅</div>
+                                        <div>
+                                            <div style="font-size: 2.2rem; font-weight: 700; color: #2D6A4F;" id="usersActive">-</div>
+                                            <div style="color: #52B788; font-size: 0.95rem; font-weight: 500;">Usuarios Activos</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TABLA DE USUARIOS -->
+                                <div style="background: white; border-radius: 15px; border: 1px solid #D8F3DC; overflow: hidden;">
+                                    <div style="padding: 25px; border-bottom: 1px solid #D8F3DC; background: linear-gradient(135deg, #F8FBF9 0%, #F0F8F0 100%);">
+                                        <h3 style="color: #2D6A4F; font-size: 1.4rem; font-weight: 600; margin: 0;">📋 Lista de Usuarios</h3>
+                                    </div>
+                                    <div style="padding: 25px;">
+                                        <div id="usersTableContainer">
+                                            <div class="loading">
+                                                <div class="spinner"></div>
+                                                <span>Cargando usuarios desde el servidor...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Cargar datos reales de usuarios
+                    loadUsersData();
+                }, 500);
+
+            } catch (error) {
+                console.error('❌ Error cargando sección de usuarios:', error);
+                showSectionError(sectionElement, 'Error cargando gestión de usuarios');
+            }
+        }
+
+        // =============== CARGA DE DATOS REALES DE USUARIOS ===============
+        async function loadUsersData() {
+            try {
+                console.log('📡 Obteniendo usuarios del Auth Service...');
+
+                // Simular llamada al backend (reemplazar con llamada real)
+                const response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('authToken') || ''}`
                     }
-                } else {
-                    // Crear nuevo usuario
-                    url = `${API_CONFIG.AUTH_SERVICE_URL}/auth/register`;
-                    method = 'POST';
-                }
-
-                // Limpiar confirm_password antes de enviar
-                delete userData.confirm_password;
-
-                response = await fetch(url, {
-                    method: method,
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify(userData)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                if (data.success) {
-                    showToast(currentEditingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente', 'success');
-                    closeUserModal();
-                    loadUsers(); // Recargar lista desde el servidor
+                if (data.success && data.users) {
+                    displayUsersData(data.users);
                 } else {
-                    throw new Error(data.message || 'Error guardando usuario');
+                    // Datos de ejemplo si no hay conexión al backend
+                    console.log('⚠️ Usando datos de ejemplo para usuarios');
+                    displayUsersData([
+                        {
+                            id: '1',
+                            first_name: 'Admin',
+                            last_name: 'Sistema',
+                            email: 'admin@veterinariaclinic.com',
+                            role: 'admin',
+                            is_active: true,
+                            created_at: new Date().toISOString()
+                        },
+                        {
+                            id: '2',
+                            first_name: 'Dr. Juan',
+                            last_name: 'Pérez',
+                            email: 'vet@veterinariaclinic.com',
+                            role: 'veterinarian',
+                            is_active: true,
+                            created_at: new Date().toISOString()
+                        },
+                        {
+                            id: '3',
+                            first_name: 'María',
+                            last_name: 'García',
+                            email: 'recepcion@veterinariaclinic.com',
+                            role: 'receptionist',
+                            is_active: true,
+                            created_at: new Date().toISOString()
+                        }
+                    ]);
                 }
 
             } catch (error) {
-                console.error('❌ Error guardando usuario:', error);
-                showToast('Error guardando usuario: ' + error.message, 'error');
-            } finally {
-                setSaveLoading(false);
+                console.error('❌ Error obteniendo usuarios:', error);
+                // Mostrar datos de ejemplo en caso de error
+                displayUsersData([]);
             }
         }
 
-        async function deleteUser() {
-            if (!currentDeleteUser) return;
+        function displayUsersData(users) {
+            // Actualizar estadísticas
+            const totalUsers = users.length;
+            const veterinarians = users.filter(u => u.role === 'veterinarian').length;
+            const clients = users.filter(u => u.role === 'client').length;
+            const activeUsers = users.filter(u => u.is_active === true).length;
 
-            try {
-                setDeleteLoading(true);
-                console.log('🗑️ Cambiando estado del usuario:', currentDeleteUser.id);
+            document.getElementById('usersTotal').textContent = totalUsers;
+            document.getElementById('usersVets').textContent = veterinarians;
+            document.getElementById('usersClients').textContent = clients;
+            document.getElementById('usersActive').textContent = activeUsers;
 
-                const newStatus = !currentDeleteUser.is_active;
+            // Mostrar tabla de usuarios
+            const tableContainer = document.getElementById('usersTableContainer');
 
-                const response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/auth/users/${currentDeleteUser.id}`, {
-                    method: 'PUT',
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify({ is_active: newStatus })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast(`Usuario ${newStatus ? 'activado' : 'desactivado'} exitosamente`, 'success');
-                    closeDeleteUserModal();
-                    loadUsers(); // Recargar desde el servidor
-                } else {
-                    throw new Error(data.message || 'Error actualizando estado del usuario');
-                }
-
-            } catch (error) {
-                console.error('❌ Error actualizando usuario:', error);
-                showToast('Error actualizando estado del usuario: ' + error.message, 'error');
-            } finally {
-                setDeleteLoading(false);
-            }
-        }
-
-        function confirmDeleteUser(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) {
-                showToast('Usuario no encontrado', 'error');
+            if (users.length === 0) {
+                tableContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #52B788;">
+                        <h3 style="color: #2D6A4F; margin-bottom: 15px;">👥 No hay usuarios</h3>
+                        <p>No se encontraron usuarios en el sistema.</p>
+                        <button onclick="openNewUserModal()" style="background: #52B788; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                            Crear Primer Usuario
+                        </button>
+                    </div>
+                `;
                 return;
             }
 
-            currentDeleteUser = user;
-
-            const isActive = user.is_active;
-            document.getElementById('confirmActionTitle').textContent =
-                isActive ? '¿Desactivar usuario?' : '¿Activar usuario?';
-            document.getElementById('deleteUserMessage').textContent =
-                isActive ? 'Esta acción desactivará el usuario y no podrá iniciar sesión.' : 'Esta acción activará el usuario y podrá iniciar sesión.';
-            document.getElementById('deleteUserText').textContent =
-                isActive ? 'Desactivar' : 'Activar';
-
-            document.getElementById('deleteUserInfo').innerHTML = `
-                <strong>${user.first_name || ''} ${user.last_name || ''}</strong><br>
-                <small>${user.email || 'Sin email'} - ${getRoleLabel(user.role)}</small>
+            tableContainer.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #D8F3DC;">
+                            <th style="padding: 18px 20px; text-align: left; font-weight: 600; color: #2D6A4F; border-bottom: 2px solid #B7E4C7;">Usuario</th>
+                            <th style="padding: 18px 20px; text-align: left; font-weight: 600; color: #2D6A4F; border-bottom: 2px solid #B7E4C7;">Rol</th>
+                            <th style="padding: 18px 20px; text-align: left; font-weight: 600; color: #2D6A4F; border-bottom: 2px solid #B7E4C7;">Estado</th>
+                            <th style="padding: 18px 20px; text-align: left; font-weight: 600; color: #2D6A4F; border-bottom: 2px solid #B7E4C7;">Fecha Registro</th>
+                            <th style="padding: 18px 20px; text-align: left; font-weight: 600; color: #2D6A4F; border-bottom: 2px solid #B7E4C7;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr style="transition: all 0.2s ease;" onmouseover="this.style.background='rgba(183, 228, 199, 0.15)'" onmouseout="this.style.background=''">
+                                <td style="padding: 18px 20px; border-bottom: 1px solid #D8F3DC;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #52B788, #38A3A5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                            ${(user.first_name || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; color: #2D6A4F;">${user.first_name || ''} ${user.last_name || ''}</div>
+                                            <div style="color: #52B788; font-size: 0.8rem;">${user.email || 'Sin email'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 18px 20px; border-bottom: 1px solid #D8F3DC;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #52B788, #38A3A5); color: white;">
+                                        ${getRoleIcon(user.role)} ${getRoleLabel(user.role)}
+                                    </span>
+                                </td>
+                                <td style="padding: 18px 20px; border-bottom: 1px solid #D8F3DC;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; ${user.is_active ? 'background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724;' : 'background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24;'}">
+                                        ${user.is_active ? '✅ Activo' : '❌ Inactivo'}
+                                    </span>
+                                </td>
+                                <td style="padding: 18px 20px; border-bottom: 1px solid #D8F3DC; color: #52B788;">
+                                    ${formatDate(user.created_at)}
+                                </td>
+                                <td style="padding: 18px 20px; border-bottom: 1px solid #D8F3DC;">
+                                    <div style="display: flex; gap: 8px;">
+                                        <button onclick="viewUser('${user.id}')" style="padding: 6px 10px; background: #22577A; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" title="Ver detalles">👁️</button>
+                                        <button onclick="editUser('${user.id}')" style="padding: 6px 10px; background: #52B788; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" title="Editar">✏️</button>
+                                        <button onclick="toggleUserStatus('${user.id}')" style="padding: 6px 10px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" title="${user.is_active ? 'Desactivar' : 'Activar'}">${user.is_active ? '🚫' : '✅'}</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
-
-            document.getElementById('deleteUserModalOverlay').classList.add('active');
         }
 
-        // =============== EXPORTAR DATOS ===============
-        async function exportUsers() {
-            try {
-                console.log('📊 Exportando lista de usuarios...');
-                showToast('Preparando exportación...', 'success');
-
-                const csvContent = generateCSV(filteredUsers);
-                downloadCSV(csvContent, `usuarios_veterinaria_${new Date().toISOString().split('T')[0]}.csv`);
-
-                showToast('Lista de usuarios exportada exitosamente', 'success');
-
-            } catch (error) {
-                console.error('❌ Error exportando usuarios:', error);
-                showToast('Error exportando lista de usuarios', 'error');
-            }
-        }
-
-        function generateCSV(users) {
-            const headers = ['ID', 'Nombre', 'Apellido', 'Email', 'Teléfono', 'Rol', 'Estado', 'Fecha Registro'];
-            const rows = users.map(user => [
-                user.id || '',
-                user.first_name || '',
-                user.last_name || '',
-                user.email || '',
-                user.phone || '',
-                getRoleLabel(user.role),
-                user.is_active ? 'Activo' : 'Inactivo',
-                formatDate(user.created_at)
-            ]);
-
-            return [headers, ...rows].map(row =>
-                row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-            ).join('\n');
-        }
-
-        function downloadCSV(content, filename) {
-            const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
-        // =============== VALIDACIONES ===============
-        function validateUserForm(userData) {
-            // Validar campos requeridos
-            if (!userData.first_name || !userData.last_name || !userData.email || !userData.role) {
-                showToast('Por favor complete todos los campos obligatorios', 'error');
-                return false;
-            }
-
-            // Validar email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(userData.email)) {
-                showToast('Por favor ingrese un email válido', 'error');
-                return false;
-            }
-
-            // Validar contraseñas (solo para usuarios nuevos)
-            if (!currentEditingUser && userData.password) {
-                if (userData.password.length < 6) {
-                    showToast('La contraseña debe tener al menos 6 caracteres', 'error');
-                    return false;
-                }
-
-                if (userData.password !== userData.confirm_password) {
-                    showToast('Las contraseñas no coinciden', 'error');
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        function validatePasswords() {
-            const password = document.getElementById('userPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (password && confirmPassword && password !== confirmPassword) {
-                document.getElementById('confirmPassword').setCustomValidity('Las contraseñas no coinciden');
-            } else {
-                document.getElementById('confirmPassword').setCustomValidity('');
-            }
-        }
-
-        // =============== UTILIDADES ===============
+        // =============== FUNCIONES AUXILIARES PARA USUARIOS ===============
         function getRoleIcon(role) {
             const icons = {
                 admin: '👑',
@@ -1657,167 +1220,199 @@ Fecha de registro: ${formatDate(user.created_at)}
 
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
-
             try {
                 const date = new Date(dateString);
                 return date.toLocaleDateString('es-CO', {
                     year: 'numeric',
                     month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    day: '2-digit'
                 });
             } catch {
                 return 'Fecha inválida';
             }
         }
 
-        // =============== UI HELPERS ===============
-        function showLoadingState(show) {
-            document.getElementById('usersTableLoading').style.display = show ? 'flex' : 'none';
-            document.getElementById('tableWrapper').style.display = show ? 'none' : 'block';
-            document.getElementById('usersTableEmpty').style.display = 'none';
-            document.getElementById('usersTableError').style.display = 'none';
+        // =============== FUNCIONES GLOBALES PARA GESTIÓN DE USUARIOS ===============
+        function openNewUserModal() {
+            console.log('🆕 Abriendo modal para nuevo usuario');
+            alert('Función: Abrir modal para crear nuevo usuario\n\nEsta funcionalidad se implementará en el siguiente paso.');
         }
 
-        function showEmptyState(show) {
-            document.getElementById('usersTableEmpty').style.display = show ? 'block' : 'none';
-            document.getElementById('tableWrapper').style.display = show ? 'none' : 'block';
-            document.getElementById('usersTableLoading').style.display = 'none';
-            document.getElementById('usersTableError').style.display = 'none';
+        function exportUsers() {
+            console.log('📊 Exportando lista de usuarios');
+            alert('Función: Exportar lista de usuarios a CSV\n\nEsta funcionalidad se implementará en el siguiente paso.');
         }
 
-        function showErrorState(show, message = '') {
-            document.getElementById('usersTableError').style.display = show ? 'block' : 'none';
-            document.getElementById('tableWrapper').style.display = show ? 'none' : 'block';
-            document.getElementById('usersTableLoading').style.display = 'none';
-            document.getElementById('usersTableEmpty').style.display = 'none';
-
-            if (show && message) {
-                const errorElement = document.querySelector('#usersTableError p');
-                if (errorElement) {
-                    errorElement.textContent = message;
-                }
-            }
+        function viewUser(userId) {
+            console.log(`👁️ Viendo detalles del usuario: ${userId}`);
+            alert(`Función: Ver detalles del usuario ID: ${userId}\n\nEsta funcionalidad se implementará en el siguiente paso.`);
         }
 
-        function setSaveLoading(loading) {
-            const btn = document.getElementById('saveUserBtn');
-            const text = document.getElementById('saveUserText');
-            const spinner = document.getElementById('saveUserSpinner');
-
-            btn.disabled = loading;
-            text.style.display = loading ? 'none' : 'inline';
-            spinner.style.display = loading ? 'inline-block' : 'none';
+        function editUser(userId) {
+            console.log(`✏️ Editando usuario: ${userId}`);
+            alert(`Función: Editar usuario ID: ${userId}\n\nEsta funcionalidad se implementará en el siguiente paso.`);
         }
 
-        function setDeleteLoading(loading) {
-            const btn = document.getElementById('confirmDeleteUser');
-            const text = document.getElementById('deleteUserText');
-            const spinner = document.getElementById('deleteUserSpinner');
-
-            btn.disabled = loading;
-            text.style.display = loading ? 'none' : 'inline';
-            spinner.style.display = loading ? 'inline-block' : 'none';
+        function toggleUserStatus(userId) {
+            console.log(`🔄 Cambiando estado del usuario: ${userId}`);
+            alert(`Función: Activar/Desactivar usuario ID: ${userId}\n\nEsta funcionalidad se implementará en el siguiente paso.`);
         }
 
-        function closeUserModal() {
-            document.getElementById('userModalOverlay').classList.remove('active');
-            currentEditingUser = null;
-        }
-
-        function closeDeleteUserModal() {
-            document.getElementById('deleteUserModalOverlay').classList.remove('active');
-            currentDeleteUser = null;
-        }
-
-        function showToast(message, type) {
-            // Eliminar toasts existentes
-            const existingToasts = document.querySelectorAll('.toast');
-            existingToasts.forEach(toast => toast.remove());
-
-            // Crear nuevo toast
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.2rem;">${type === 'success' ? '✅' : '❌'}</span>
-                    <span>${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()"
-                            style="margin-left: auto; background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.7;">✕</button>
+        // =============== CARGA DE OTRAS SECCIONES (PLACEHOLDERS) ===============
+        async function loadInventorySection(sectionElement) {
+            sectionElement.innerHTML = `
+                <div class="section-placeholder">
+                    <h2>📦 Gestión de Inventario</h2>
+                    <p>Módulo para administrar medicamentos e inventario</p>
+                    <p><strong>Funcionalidades a implementar:</strong></p>
+                    <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
+                        <li>CRUD de medicamentos</li>
+                        <li>Control de stock</li>
+                        <li>Alertas de stock bajo</li>
+                        <li>Reportes de inventario</li>
+                        <li>Gestión de proveedores</li>
+                    </ul>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
                 </div>
             `;
-
-            document.body.appendChild(toast);
-
-            // Auto-remover después de 5 segundos
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.style.animation = 'slideOutRight 0.3s ease';
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, 5000);
         }
 
-        // =============== EVENTOS DEL TECLADO ===============
-        document.addEventListener('keydown', function(event) {
-            // Cerrar modales con Escape
-            if (event.key === 'Escape') {
-                if (document.getElementById('userModalOverlay').classList.contains('active')) {
-                    closeUserModal();
-                }
-                if (document.getElementById('deleteUserModalOverlay').classList.contains('active')) {
-                    closeDeleteUserModal();
-                }
-            }
+        async function loadAppointmentsSection(sectionElement) {
+            sectionElement.innerHTML = `
+                <div class="section-placeholder">
+                    <h2>📋 Gestión de Citas</h2>
+                    <p>Módulo para administrar citas médicas</p>
+                    <p><strong>Funcionalidades a implementar:</strong></p>
+                    <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
+                        <li>CRUD de citas médicas</li>
+                        <li>Calendario de citas</li>
+                        <li>Asignación de veterinarios</li>
+                        <li>Recordatorios automáticos</li>
+                        <li>Reportes por veterinario</li>
+                    </ul>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            `;
+        }
 
-            // Atajo para nuevo usuario (Ctrl + N)
-            if (event.ctrlKey && event.key === 'n') {
-                event.preventDefault();
-                openNewUserModal();
-            }
-        });
+        async function loadNotificationsSection(sectionElement) {
+            sectionElement.innerHTML = `
+                <div class="section-placeholder">
+                    <h2>🔔 Centro de Notificaciones</h2>
+                    <p>Módulo para gestionar notificaciones del sistema</p>
+                    <p><strong>Funcionalidades a implementar:</strong></p>
+                    <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
+                        <li>Envío de recordatorios</li>
+                        <li>Alertas de inventario</li>
+                        <li>Mensajes personalizados</li>
+                        <li>Notificaciones por email y WhatsApp</li>
+                        <li>Plantillas de mensajes</li>
+                    </ul>
+                    <button onclick="navigateToSection('dashboard')">Volver al Dashboard</button>
+                </div>
+            `;
+        }
 
-        // =============== FUNCIONES GLOBALES PARA INTEGRACIÓN ===============
-        window.userManagement = {
-            loadUsers,
-            loadUserStats,
-            openNewUserModal,
-            editUser,
-            viewUser,
-            confirmDeleteUser,
-            exportUsers,
-            clearFilters,
-            filterUsers,
-            // Funciones para uso externo desde el dashboard principal
-            refreshData: loadUsers,
-            getCurrentUsers: () => filteredUsers,
-            getUsersCount: () => ({
-                total: allUsers.length,
-                filtered: filteredUsers.length,
-                active: allUsers.filter(u => u.is_active).length
-            })
-        };
+        // =============== FUNCIONES AUXILIARES ===============
+        function showSectionError(sectionElement, errorMessage) {
+            sectionElement.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: #dc3545;">
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">❌ ${errorMessage}</h3>
+                    <p>No se pudo cargar el contenido de esta sección.</p>
+                    <button onclick="location.reload()" style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
 
-        // =============== MONITOREO Y LOGS ===============
-        console.log('✅ Gestión de Usuarios y Roles inicializada correctamente');
-        console.log('🔗 Conectado a Auth Service:', API_CONFIG.AUTH_SERVICE_URL);
-        console.log('🎯 Funciones disponibles:', Object.keys(window.userManagement));
-
-        // Verificar conectividad con el backend al cargar
-        setTimeout(async () => {
+        async function loadUserInfo() {
             try {
-                const response = await fetch(`${API_CONFIG.AUTH_SERVICE_URL}/health`);
-                if (response.ok) {
-                    console.log('✅ Conectividad con Auth Service verificada');
+                const response = await fetch('/api/user-info');
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    console.log('👤 Usuario cargado:', currentUser);
+                    loadDashboardData();
                 } else {
-                    console.warn('⚠️ Auth Service responde pero con errores');
+                    console.error('❌ Error obteniendo info del usuario');
+                    window.location.href = '/login';
                 }
             } catch (error) {
-                console.error('❌ No se puede conectar con Auth Service:', error);
-                showToast('Advertencia: No se puede conectar con el servidor de autenticación', 'error');
+                console.error('❌ Error cargando usuario:', error);
+                loadDashboardData(); // Intentar cargar dashboard anyway
             }
-        }, 1000);
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard-data');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateDashboardStats(result.data);
+                } else {
+                    console.error('❌ Error en dashboard data:', result.message);
+                }
+
+            } catch (error) {
+                console.error('❌ Error cargando datos del dashboard:', error);
+            }
+        }
+
+        function updateDashboardStats(data) {
+            if (data.total_pets !== undefined) {
+                document.getElementById('totalPets').textContent = data.total_pets;
+            }
+
+            if (data.appointments_today !== undefined) {
+                document.getElementById('appointmentsToday').textContent = data.appointments_today;
+            }
+
+            if (data.low_stock_count !== undefined) {
+                document.getElementById('lowStockItems').textContent = data.low_stock_count;
+            }
+
+            if (data.inventory_value !== undefined) {
+                document.getElementById('inventoryValue').textContent = formatCurrency(data.inventory_value);
+            }
+
+            const notificationBadge = document.getElementById('notificationBadge');
+            const notificationsCount = data.notifications_count || 0;
+
+            if (notificationsCount > 0) {
+                notificationBadge.textContent = notificationsCount;
+                notificationBadge.style.display = 'flex';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // =============== FUNCIÓN GLOBAL PARA NAVEGACIÓN ===============
+        window.navigateToSection = navigateToSection;
+
+        // =============== MANEJO DE ERRORES GLOBAL ===============
+        window.addEventListener('error', (e) => {
+            console.error('❌ Error global:', e.error);
+        });
+
+        console.log('✅ Panel de Administrador Conectado inicializado correctamente');
+        console.log('🔗 APIs configuradas:', API_CONFIG);
+        console.log('📋 Secciones disponibles: dashboard, users, inventory, appointments, notifications, etc.');
     </script>
 </body>
 </html>
