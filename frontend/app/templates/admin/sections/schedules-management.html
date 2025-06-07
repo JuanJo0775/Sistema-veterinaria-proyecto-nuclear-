@@ -956,6 +956,7 @@
 {% block scripts %}
 {{ super() }}
 <script>
+    // Reemplaza TODO el JavaScript anterior con este código corregido
     // =============== VARIABLES GLOBALES ===============
     let allStaff = [];
     let filteredStaff = [];
@@ -1105,16 +1106,14 @@
     function updateStatistics() {
         const totalStaff = allStaff.length;
         const totalVets = allStaff.filter(s => s.user_role === 'veterinarian').length;
-        
-        // Calcular horarios activos (que tienen al menos un día activo)
+
         const activeSchedules = allStaff.filter(staff => {
             return Object.values(staff.weekly_schedule).some(day => day.active);
         }).length;
 
-        // Calcular promedio de horas por semana
         let totalHours = 0;
         let staffWithHours = 0;
-        
+
         allStaff.forEach(staff => {
             let weeklyHours = 0;
             Object.values(staff.weekly_schedule).forEach(day => {
@@ -1123,15 +1122,15 @@
                     const end = parseTime(day.end);
                     const breakStart = day.break_start ? parseTime(day.break_start) : 0;
                     const breakEnd = day.break_end ? parseTime(day.break_end) : 0;
-                    
-                    let dailyHours = (end - start) / 60; // Convertir a horas
+
+                    let dailyHours = (end - start) / 60;
                     if (breakStart && breakEnd) {
-                        dailyHours -= (breakEnd - breakStart) / 60; // Restar descanso
+                        dailyHours -= (breakEnd - breakStart) / 60;
                     }
                     weeklyHours += dailyHours;
                 }
             });
-            
+
             if (weeklyHours > 0) {
                 totalHours += weeklyHours;
                 staffWithHours++;
@@ -1149,7 +1148,7 @@
     function parseTime(timeString) {
         if (!timeString) return 0;
         const [hours, minutes] = timeString.split(':').map(Number);
-        return hours * 60 + minutes; // Retorna minutos totales
+        return hours * 60 + minutes;
     }
 
     // =============== MOSTRAR DATOS EN GRID ===============
@@ -1157,7 +1156,6 @@
         const container = document.getElementById('staffGridContainer');
         const resultsInfo = document.getElementById('resultsInfo');
 
-        // Actualizar información de resultados
         resultsInfo.textContent = `Mostrando ${filteredStaff.length} de ${allStaff.length} miembros del personal`;
 
         if (filteredStaff.length === 0) {
@@ -1183,7 +1181,7 @@
     function createStaffCard(staff) {
         const activeDays = Object.values(staff.weekly_schedule).filter(day => day.active).length;
         const totalHours = calculateWeeklyHours(staff.weekly_schedule);
-        
+
         return `
             <div class="staff-card">
                 <div class="staff-header">
@@ -1229,14 +1227,14 @@
 
     function calculateWeeklyHours(schedule) {
         let totalHours = 0;
-        
+
         Object.values(schedule).forEach(day => {
             if (day.active && day.start && day.end) {
                 const start = parseTime(day.start);
                 const end = parseTime(day.end);
                 const breakStart = day.break_start ? parseTime(day.break_start) : 0;
                 const breakEnd = day.break_end ? parseTime(day.break_end) : 0;
-                
+
                 let dailyHours = (end - start) / 60;
                 if (breakStart && breakEnd) {
                     dailyHours -= (breakEnd - breakStart) / 60;
@@ -1244,7 +1242,7 @@
                 totalHours += dailyHours;
             }
         });
-        
+
         return Math.round(totalHours);
     }
 
@@ -1255,16 +1253,13 @@
         const scheduleFilter = document.getElementById('scheduleFilter').value;
 
         filteredStaff = allStaff.filter(staff => {
-            // Filtro de búsqueda
             const matchesSearch = !searchTerm ||
                 (staff.user_name && staff.user_name.toLowerCase().includes(searchTerm)) ||
                 (staff.user_email && staff.user_email.toLowerCase().includes(searchTerm)) ||
                 (staff.user_role && staff.user_role.toLowerCase().includes(searchTerm));
 
-            // Filtro de rol
             const matchesRole = !roleFilter || staff.user_role === roleFilter;
 
-            // Filtro de estado del horario
             let matchesSchedule = true;
             if (scheduleFilter === 'active') {
                 matchesSchedule = Object.values(staff.weekly_schedule).some(day => day.active);
@@ -1306,11 +1301,9 @@
 
         subtitle.textContent = `${staff.user_name} - ${getRoleLabel(staff.user_role)}`;
 
-        // Generar contenido del horario
         const scheduleContent = generateScheduleView(staff);
         body.innerHTML = scheduleContent;
 
-        // Configurar botón de edición
         document.getElementById('editFromViewBtn').onclick = () => {
             closeViewModal();
             editSchedule(staff.user_id);
@@ -1354,7 +1347,7 @@
                                     ${dayData.active ? '✅ Activo' : '❌ Inactivo'}
                                 </div>
                             </div>
-                            
+
                             ${dayData.active ? `
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
                                     <div>
@@ -1398,18 +1391,18 @@
 
     function calculateDayHours(dayData) {
         if (!dayData.active || !dayData.start || !dayData.end) return 0;
-        
+
         const start = parseTime(dayData.start);
         const end = parseTime(dayData.end);
         const breakStart = dayData.break_start ? parseTime(dayData.break_start) : 0;
         const breakEnd = dayData.break_end ? parseTime(dayData.break_end) : 0;
-        
+
         let hours = (end - start) / 60;
         if (breakStart && breakEnd) {
             hours -= (breakEnd - breakStart) / 60;
         }
-        
-        return Math.round(hours * 10) / 10; // Redondear a 1 decimal
+
+        return Math.round(hours * 10) / 10;
     }
 
     function closeViewModal() {
@@ -1439,14 +1432,11 @@
 
         currentEditingUser = staff;
 
-        // Configurar título del modal
         modalTitle.textContent = `Gestionar Horario`;
         modalSubtitle.textContent = `${staff.user_name} - ${getRoleLabel(staff.user_role)}`;
 
-        // Generar editor de horarios
         scheduleEditor.innerHTML = generateScheduleEditor(staff.weekly_schedule);
 
-        // Configurar eventos de los toggles y campos
         setupScheduleEditorEvents();
 
         modal.classList.add('active');
@@ -1459,14 +1449,14 @@
                 <div class="day-schedule ${dayData.active ? 'active' : ''}" data-day="${day.key}">
                     <div class="day-header">
                         <div class="day-name">
-                            ${getDateIcon(day.key)} ${day.label}
+                            📅 ${day.label}
                         </div>
                         <div class="day-toggle">
                             <span style="color: #52B788; font-weight: 600; margin-right: 8px;">
                                 ${dayData.active ? 'Activo' : 'Inactivo'}
                             </span>
-                            <div class="toggle-switch ${dayData.active ? 'active' : ''}" 
-                                 onclick="toggleDay('${day.key}')" 
+                            <div class="toggle-switch ${dayData.active ? 'active' : ''}"
+                                 onclick="toggleDay('${day.key}')"
                                  data-day="${day.key}">
                             </div>
                         </div>
@@ -1474,33 +1464,33 @@
                     <div class="time-inputs ${dayData.active ? 'active' : ''}" data-day="${day.key}">
                         <div class="time-group">
                             <label class="time-label">🕐 Hora Inicio</label>
-                            <input type="time" class="time-input" 
-                                   value="${dayData.start || ''}" 
-                                   data-field="start" 
+                            <input type="time" class="time-input"
+                                   value="${dayData.start || ''}"
+                                   data-field="start"
                                    data-day="${day.key}"
                                    ${!dayData.active ? 'disabled' : ''}>
                         </div>
                         <div class="time-group">
                             <label class="time-label">🕐 Hora Fin</label>
-                            <input type="time" class="time-input" 
-                                   value="${dayData.end || ''}" 
-                                   data-field="end" 
+                            <input type="time" class="time-input"
+                                   value="${dayData.end || ''}"
+                                   data-field="end"
                                    data-day="${day.key}"
                                    ${!dayData.active ? 'disabled' : ''}>
                         </div>
                         <div class="time-group">
                             <label class="time-label">☕ Inicio Descanso</label>
-                            <input type="time" class="time-input" 
-                                   value="${dayData.break_start || ''}" 
-                                   data-field="break_start" 
+                            <input type="time" class="time-input"
+                                   value="${dayData.break_start || ''}"
+                                   data-field="break_start"
                                    data-day="${day.key}"
                                    ${!dayData.active ? 'disabled' : ''}>
                         </div>
                         <div class="time-group">
                             <label class="time-label">☕ Fin Descanso</label>
-                            <input type="time" class="time-input" 
-                                   value="${dayData.break_end || ''}" 
-                                   data-field="break_end" 
+                            <input type="time" class="time-input"
+                                   value="${dayData.break_end || ''}"
+                                   data-field="break_end"
                                    data-day="${day.key}"
                                    ${!dayData.active ? 'disabled' : ''}>
                         </div>
@@ -1510,28 +1500,13 @@
         }).join('');
     }
 
-    function getDateIcon(day) {
-        const icons = {
-            monday: '📅',
-            tuesday: '📅',
-            wednesday: '📅',
-            thursday: '📅',
-            friday: '📅',
-            saturday: '📅',
-            sunday: '📅'
-        };
-        return icons[day] || '📅';
-    }
-
     function setupScheduleEditorEvents() {
-        // Eventos para cambios en los campos de tiempo
         document.querySelectorAll('.time-input').forEach(input => {
             input.addEventListener('change', function() {
                 const day = this.dataset.day;
                 const field = this.dataset.field;
                 const value = this.value;
 
-                // Validar horarios
                 validateTimeInput(this, day, field, value);
             });
         });
@@ -1543,26 +1518,21 @@
         const timeInputs = document.querySelector(`.time-inputs[data-day="${dayKey}"]`);
         const inputs = timeInputs.querySelectorAll('.time-input');
 
-        // Cambiar estado
         const isActive = toggle.classList.contains('active');
         const newState = !isActive;
 
-        // Actualizar UI
         toggle.classList.toggle('active', newState);
         daySchedule.classList.toggle('active', newState);
         timeInputs.classList.toggle('active', newState);
 
-        // Actualizar texto del toggle
         const toggleText = toggle.parentElement.querySelector('span');
         toggleText.textContent = newState ? 'Activo' : 'Inactivo';
 
-        // Habilitar/deshabilitar inputs
         inputs.forEach(input => {
             input.disabled = !newState;
             if (!newState) {
-                input.value = ''; // Limpiar valores si se desactiva
+                input.value = '';
             } else {
-                // Establecer valores por defecto si se activa
                 setDefaultTimes(dayKey, input);
             }
         });
@@ -1585,14 +1555,12 @@
     function validateTimeInput(input, day, field, value) {
         const dayContainer = document.querySelector(`.day-schedule[data-day="${day}"]`);
         const otherInputs = dayContainer.querySelectorAll('.time-input');
-        
-        // Obtener todos los valores actuales del día
+
         const dayValues = {};
         otherInputs.forEach(otherInput => {
             dayValues[otherInput.dataset.field] = otherInput.value;
         });
 
-        // Validaciones básicas
         let isValid = true;
         let errorMessage = '';
 
@@ -1626,7 +1594,6 @@
             }
         }
 
-        // Mostrar/ocultar error
         if (!isValid) {
             input.style.borderColor = '#dc3545';
             showMessage(errorMessage, 'error');
@@ -1652,35 +1619,31 @@
         const saveBtn = document.getElementById('saveBtn');
         const saveBtnText = document.getElementById('saveBtnText');
 
-        // Recopilar datos del formulario
         const scheduleData = {};
-        
+
         DAYS_OF_WEEK.forEach(day => {
             const dayContainer = document.querySelector(`.day-schedule[data-day="${day.key}"]`);
             const toggle = document.querySelector(`.toggle-switch[data-day="${day.key}"]`);
             const isActive = toggle.classList.contains('active');
-            
+
             const inputs = dayContainer.querySelectorAll('.time-input');
             const dayData = { active: isActive };
-            
+
             inputs.forEach(input => {
                 dayData[input.dataset.field] = input.value;
             });
-            
+
             scheduleData[day.key] = dayData;
         });
 
-        // Validar datos antes de enviar
         if (!validateScheduleData(scheduleData)) {
             return;
         }
 
-        // Deshabilitar botón
         saveBtn.disabled = true;
         saveBtnText.textContent = 'Guardando...';
 
         try {
-            // Intentar guardar a través del endpoint del frontend
             const response = await fetch(`/api/admin/schedules/${currentEditingUser.user_id}`, {
                 method: 'PUT',
                 headers: {
@@ -1696,7 +1659,6 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Actualizar datos locales
                     const staffIndex = allStaff.findIndex(s => s.user_id === currentEditingUser.user_id);
                     if (staffIndex !== -1) {
                         allStaff[staffIndex].weekly_schedule = scheduleData;
@@ -1719,7 +1681,6 @@
             console.error('❌ Error guardando horario:', error);
             showMessage('Error al guardar horario: ' + error.message, 'error');
         } finally {
-            // Rehabilitar botón
             saveBtn.disabled = false;
             saveBtnText.textContent = 'Guardar Horario';
         }
@@ -1732,27 +1693,23 @@
             if (dayData.active) {
                 hasActiveDay = true;
 
-                // Validar que tenga horarios básicos
                 if (!dayData.start || !dayData.end) {
                     showMessage(`El ${DAYS_OF_WEEK.find(d => d.key === dayKey).label} activo debe tener hora de inicio y fin`, 'error');
                     return false;
                 }
 
-                // Validar que inicio sea menor que fin
                 if (parseTime(dayData.start) >= parseTime(dayData.end)) {
                     showMessage(`En ${DAYS_OF_WEEK.find(d => d.key === dayKey).label}: la hora de inicio debe ser menor que la de fin`, 'error');
                     return false;
                 }
 
-                // Validar descansos si existen
                 if (dayData.break_start && dayData.break_end) {
                     if (parseTime(dayData.break_start) >= parseTime(dayData.break_end)) {
                         showMessage(`En ${DAYS_OF_WEEK.find(d => d.key === dayKey).label}: el inicio del descanso debe ser menor que el fin`, 'error');
                         return false;
                     }
 
-                    // Validar que el descanso esté dentro del horario laboral
-                    if (parseTime(dayData.break_start) < parseTime(dayData.start) || 
+                    if (parseTime(dayData.break_start) < parseTime(dayData.start) ||
                         parseTime(dayData.break_end) > parseTime(dayData.end)) {
                         showMessage(`En ${DAYS_OF_WEEK.find(d => d.key === dayKey).label}: el descanso debe estar dentro del horario laboral`, 'error');
                         return false;
@@ -1788,7 +1745,7 @@
         return labels[role] || 'Personal';
     }
 
-    // =============== FUNCIONES DE EXPORTAR Y ACCIONES MASIVAS ===============
+    // =============== FUNCIONES DE EXPORTAR Y ACCIONES ===============
     function refreshSchedules() {
         showMessage('Actualizando horarios...', 'info');
         loadSchedulesData();
@@ -1796,1235 +1753,493 @@
 
     function exportSchedules(format) {
         if (format === 'pdf') {
-            showExportOptionsModal();
+            exportSchedulesToPDF();
         } else {
             showMessage(`Exportando horarios en formato ${format.toUpperCase()}...`, 'info');
         }
     }
 
-    function showExportOptionsModal() {
+    function exportSchedulesToPDF() {
+        const htmlContent = generateSchedulesPDFContent();
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        };
+
+        showMessage('📄 Generando PDF completo con todo el personal...', 'success');
+    }
+
+    function generateSchedulesPDFContent() {
+        const currentDate = new Date().toLocaleString('es-CO');
+
+        return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Horarios - Clínica Veterinaria</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #52B788; padding-bottom: 20px; }
+        .staff-schedule { margin-bottom: 30px; break-inside: avoid; }
+        .staff-info { background: #D8F3DC; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .schedule-table { width: 100%; border-collapse: collapse; }
+        .schedule-table th, .schedule-table td { border: 1px solid #B7E4C7; padding: 8px; text-align: left; }
+        .schedule-table th { background: #52B788; color: white; }
+        .active-day { background: #D8F3DC; }
+        .inactive-day { background: #f8f9fa; color: #6c757d; }
+        @page { margin: 1cm; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐾 Clínica Veterinaria</h1>
+        <h2>Reporte de Horarios del Personal</h2>
+        <p><strong>Fecha:</strong> ${currentDate}</p>
+    </div>
+
+    ${filteredStaff.map(staff => `
+        <div class="staff-schedule">
+            <div class="staff-info">
+                <h3>${staff.user_name} - ${getRoleLabel(staff.user_role)}</h3>
+                <p><strong>Email:</strong> ${staff.user_email} | <strong>Teléfono:</strong> ${staff.phone || 'N/A'}</p>
+                <p><strong>Horas semanales:</strong> ${calculateWeeklyHours(staff.weekly_schedule)}h</p>
+            </div>
+
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Estado</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th>Descanso</th>
+                        <th>Horas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${DAYS_OF_WEEK.map(day => {
+                        const dayData = staff.weekly_schedule[day.key];
+                        return `
+                            <tr class="${dayData.active ? 'active-day' : 'inactive-day'}">
+                                <td><strong>${day.label}</strong></td>
+                                <td>${dayData.active ? '✅ Activo' : '❌ Inactivo'}</td>
+                                <td>${dayData.start || '-'}</td>
+                                <td>${dayData.end || '-'}</td>
+                                <td>${dayData.break_start && dayData.break_end ? `${dayData.break_start} - ${dayData.break_end}` : '-'}</td>
+                                <td>${dayData.active ? calculateDayHours(dayData) + 'h' : '-'}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `).join('')}
+</body>
+</html>
+        `;
+    }
+
+    function showBulkScheduleModal() {
+        // Crear modal dinámicamente
         const modal = document.createElement('div');
         modal.className = 'modal active';
-        modal.id = 'exportOptionsModal';
+        modal.id = 'bulkScheduleModal';
 
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px;">
-                <button class="modal-close" onclick="closeExportOptionsModal()">✖</button>
+            <div class="modal-content" style="max-width: 800px;">
+                <button class="modal-close" onclick="closeBulkScheduleModal()">✖</button>
                 <div class="modal-header">
                     <h2 class="modal-title">
-                        <span>📄</span>
-                        Opciones de Exportación PDF
+                        <span>📋</span>
+                        Asignar Horario Masivo
                     </h2>
-                    <p class="modal-subtitle">Selecciona qué horarios incluir en el reporte</p>
+                    <p class="modal-subtitle">Aplica el mismo horario a múltiples miembros del personal</p>
                 </div>
                 <div class="modal-body">
-                    <div style="display: grid; gap: 15px;">
-                        <button onclick="exportAllSchedules()" class="export-option-btn">
-                            <div style="font-size: 2rem; margin-bottom: 10px;">📋</div>
-                            <div style="font-weight: 600; margin-bottom: 5px;">Exportar Todo el Personal</div>
-                            <div style="font-size: 0.9rem; opacity: 0.8;">
-                                Incluye todos los ${allStaff.length} miembros del personal con sus horarios completos
+                    <!-- Selección de Personal -->
+                    <div style="background: #D8F3DC; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            👥 Seleccionar Personal
+                        </h4>
+                        <div style="display: grid; gap: 10px; max-height: 200px; overflow-y: auto;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="selectAllStaff" onchange="toggleAllStaff()" style="width: 18px; height: 18px;">
+                                <label for="selectAllStaff" style="font-weight: 600; color: #2D6A4F;">Seleccionar Todos</label>
                             </div>
-                        </button>
+                            <div id="staffSelectionList">
+                                ${generateStaffSelectionList()}
+                            </div>
+                        </div>
+                    </div>
 
-                        <button onclick="exportFilteredSchedules()" class="export-option-btn">
-                            <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
-                            <div style="font-weight: 600; margin-bottom: 5px;">Exportar Personal Seleccionado</div>
-                            <div style="font-size: 0.9rem; opacity: 0.8;">
-                                Permite filtrar y seleccionar específicamente qué personal incluir
-                            </div>
-                        </button>
+                    <!-- Plantillas Predefinidas -->
+                    <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            📋 Plantillas Predefinidas
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <button onclick="applyTemplate('standard')" class="template-btn" data-template="standard">
+                                <div style="font-weight: 600; margin-bottom: 5px;">🕐 Horario Estándar</div>
+                                <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 8:00-17:00<br>Sáb: 8:00-12:00</div>
+                            </button>
+                            <button onclick="applyTemplate('extended')" class="template-btn" data-template="extended">
+                                <div style="font-weight: 600; margin-bottom: 5px;">🕘 Horario Extendido</div>
+                                <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 7:30-18:00<br>Sáb: 8:00-13:00</div>
+                            </button>
+                            <button onclick="applyTemplate('weekend')" class="template-btn" data-template="weekend">
+                                <div style="font-weight: 600; margin-bottom: 5px;">📅 Solo Fines de Semana</div>
+                                <div style="font-size: 0.85rem; opacity: 0.8;">Sáb-Dom: 9:00-17:00</div>
+                            </button>
+                            <button onclick="applyTemplate('parttime')" class="template-btn" data-template="parttime">
+                                <div style="font-weight: 600; margin-bottom: 5px;">⏰ Medio Tiempo</div>
+                                <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 8:00-12:00</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Editor de Horario Personalizado -->
+                    <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px;">
+                        <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            ⚙️ Horario Personalizado
+                        </h4>
+                        <div id="bulkScheduleEditor">
+                            ${generateBulkScheduleEditor()}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" onclick="closeExportOptionsModal()" class="btn-cancel">
+                    <button type="button" onclick="closeBulkScheduleModal()" class="btn-cancel">
                         Cancelar
+                    </button>
+                    <button type="button" onclick="applyBulkSchedule()" class="btn-save" id="bulkSaveBtn">
+                        <span>📋</span>
+                        <span>Aplicar a Personal Seleccionado</span>
                     </button>
                 </div>
             </div>
         `;
 
-        // Agregar estilos para los botones de opción
-        const style = document.createElement('style');
-        style.textContent = `
-        .export-option-btn {
-            padding: 25px;
-            border: 2px solid #D8F3DC;
-            border-radius: 15px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            color: #2D6A4F;
-            width: 100%;
-         }
-        .export-option-btn:hover {
-            border-color: #52B788;
-            background: #D8F3DC;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(82, 183, 136, 0.2);
-         }
-        `;
-        document.head.appendChild(style);
-
         document.body.appendChild(modal);
+        setupBulkScheduleEvents();
     }
 
-        function exportAllSchedules() {
-            closeExportOptionsModal();
-
-            // Usar la función existente para exportar todo
-            const htmlContent = generateSchedulesPDFContent();
-
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-
-            printWindow.onload = function() {
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 500);
-            };
-
-            showMessage('📄 Generando PDF completo con todo el personal...', 'success');
-        }
-
-        function closeExportOptionsModal() {
-            const modal = document.getElementById('exportOptionsModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        const staff = aff.find(s => s.user_id === userId);
-
-        if (role === 'all') {
-            checkbox.checked = true;
-        } else {
-            checkbox.checked = staff && staff.user_role === role;
-        }
-
-
-        function selectBySchedule(scheduleType) {
-            // Limpiar selección previa de botones
-            document.querySelectorAll('.filter-quick-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-filter="${scheduleType}"]`).classList.add('active');
-
-            const checkboxes = document.querySelectorAll('.export-checkbox');
-
-            checkboxes.forEach(checkbox => {
-                const userId = checkbox.value;
-                const staff = allSt
-
-            function exportSchedulesToPDF() {
-                const htmlContent = generateSchedulesPDFContent();
-
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(htmlContent);
-                printWindow.document.close();
-
-                printWindow.onload = function() {
-                    setTimeout(() => {
-                        printWindow.print();
-                        printWindow.close();
-                    }, 500);
-                };
-            }
-
-            function generateSchedulesPDFContent() {
-                const currentDate = new Date().toLocaleString('es-CO');
-
-                return `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <title>Reporte de Horarios - Clínica Veterinaria</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #52B788; padding-bottom: 20px; }
-                .staff-schedule { margin-bottom: 30px; break-inside: avoid; }
-                .staff-info { background: #D8F3DC; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-                .schedule-table { width: 100%; border-collapse: collapse; }
-                .schedule-table th, .schedule-table td { border: 1px solid #B7E4C7; padding: 8px; text-align: left; }
-                .schedule-table th { background: #52B788; color: white; }
-                .active-day { background: #D8F3DC; }
-                .inactive-day { background: #f8f9fa; color: #6c757d; }
-                @page { margin: 1cm; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🐾 Clínica Veterinaria</h1>
-                <h2>Reporte de Horarios del Personal</h2>
-                <p><strong>Fecha:</strong> ${currentDate}</p>
-            </div>
-
-            ${filteredStaff.map(staff => `
-                <div class="staff-schedule">
-                    <div class="staff-info">
-                        <h3>${staff.user_name} - ${getRoleLabel(staff.user_role)}</h3>
-                        <p><strong>Email:</strong> ${staff.user_email} | <strong>Teléfono:</strong> ${staff.phone || 'N/A'}</p>
-                        <p><strong>Horas semanales:</strong> ${calculateWeeklyHours(staff.weekly_schedule)}h</p>
+    function generateStaffSelectionList() {
+        return allStaff
+            .filter(staff => staff.user_role !== 'admin') // Excluir administradores
+            .map(staff => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #B7E4C7;">
+                    <input type="checkbox"
+                           id="staff_${staff.user_id}"
+                           value="${staff.user_id}"
+                           class="staff-checkbox"
+                           style="width: 16px; height: 16px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2D6A4F;">${staff.user_name}</div>
+                        <div style="font-size: 0.85rem; color: #52B788;">${getRoleLabel(staff.user_role)} • ${staff.user_email}</div>
                     </div>
-
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th>Día</th>
-                                <th>Estado</th>
-                                <th>Inicio</th>
-                                <th>Fin</th>
-                                <th>Descanso</th>
-                                <th>Horas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${DAYS_OF_WEEK.map(day => {
-                                const dayData = staff.weekly_schedule[day.key];
-                                return `
-                                    <tr class="${dayData.active ? 'active-day' : 'inactive-day'}">
-                                        <td><strong>${day.label}</strong></td>
-                                        <td>${dayData.active ? '✅ Activo' : '❌ Inactivo'}</td>
-                                        <td>${dayData.start || '-'}</td>
-                                        <td>${dayData.end || '-'}</td>
-                                        <td>${dayData.break_start && dayData.break_end ? `${dayData.break_start} - ${dayData.break_end}` : '-'}</td>
-                                        <td>${dayData.active ? calculateDayHours(dayData) + 'h' : '-'}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `).join('')}
-        </body>
-        </html>
-                `;
-            }
-
-        function createBulkSchedule() {
-                showBulkScheduleModal();
-        }
-
-        function showBulkScheduleModal() {
-            // Crear modal dinámicamente
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.id = 'bulkScheduleModal';
-
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px;">
-                    <button class="modal-close" onclick="closeBulkScheduleModal()">✖</button>
-                    <div class="modal-header">
-                        <h2 class="modal-title">
-                            <span>📋</span>
-                            Asignar Horario Masivo
-                        </h2>
-                        <p class="modal-subtitle">Aplica el mismo horario a múltiples miembros del personal</p>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Selección de Personal -->
-                        <div style="background: #D8F3DC; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
-                            <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                👥 Seleccionar Personal
-                            </h4>
-                            <div style="display: grid; gap: 10px; max-height: 200px; overflow-y: auto;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <input type="checkbox" id="selectAllStaff" onchange="toggleAllStaff()" style="width: 18px; height: 18px;">
-                                    <label for="selectAllStaff" style="font-weight: 600; color: #2D6A4F;">Seleccionar Todos</label>
-                                </div>
-                                <div id="staffSelectionList">
-                                    ${generateStaffSelectionList()}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Plantillas Predefinidas -->
-                        <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
-                            <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                📋 Plantillas Predefinidas
-                            </h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                <button onclick="applyTemplate('standard')" class="template-btn" data-template="standard">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">🕐 Horario Estándar</div>
-                                    <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 8:00-17:00<br>Sáb: 8:00-12:00</div>
-                                </button>
-                                <button onclick="applyTemplate('extended')" class="template-btn" data-template="extended">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">🕘 Horario Extendido</div>
-                                    <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 7:30-18:00<br>Sáb: 8:00-13:00</div>
-                                </button>
-                                <button onclick="applyTemplate('weekend')" class="template-btn" data-template="weekend">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">📅 Solo Fines de Semana</div>
-                                    <div style="font-size: 0.85rem; opacity: 0.8;">Sáb-Dom: 9:00-17:00</div>
-                                </button>
-                                <button onclick="applyTemplate('parttime')" class="template-btn" data-template="parttime">
-                                    <div style="font-weight: 600; margin-bottom: 5px;">⏰ Medio Tiempo</div>
-                                    <div style="font-size: 0.85rem; opacity: 0.8;">Lun-Vie: 8:00-12:00</div>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Editor de Horario Personalizado -->
-                        <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px;">
-                            <h4 style="color: #2D6A4F; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                ⚙️ Horario Personalizado
-                            </h4>
-                            <div id="bulkScheduleEditor">
-                                ${generateBulkScheduleEditor()}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" onclick="closeBulkScheduleModal()" class="btn-cancel">
-                            Cancelar
-                        </button>
-                        <button type="button" onclick="applyBulkSchedule()" class="btn-save" id="bulkSaveBtn">
-                            <span>📋</span>
-                            <span>Aplicar a Personal Seleccionado</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-            setupBulkScheduleEvents();
-        }
-
-        function generateStaffSelectionList() {
-            return allStaff
-                .filter(staff => staff.user_role !== 'admin') // Excluir administradores
-                .map(staff => `
-                    <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #B7E4C7;">
-                        <input type="checkbox"
-                               id="staff_${staff.user_id}"
-                               value="${staff.user_id}"
-                               class="staff-checkbox"
-                               style="width: 16px; height: 16px;">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #2D6A4F;">${staff.user_name}</div>
-                            <div style="font-size: 0.85rem; color: #52B788;">${getRoleLabel(staff.user_role)} • ${staff.user_email}</div>
-                        </div>
-                        <div class="role-badge ${staff.user_role}" style="font-size: 0.7rem; padding: 2px 8px;">
-                            ${getRoleIcon(staff.user_role)} ${getRoleLabel(staff.user_role)}
-                        </div>
-                    </div>
-                `).join('');
-        }
-
-        function generateBulkScheduleEditor() {
-            return DAYS_OF_WEEK.map(day => `
-                <div class="day-schedule" data-day="${day.key}" style="margin-bottom: 15px;">
-                    <div class="day-header">
-                        <div class="day-name" style="display: flex; align-items: center; gap: 10px;">
-                            ${getDateIcon(day.key)} ${day.label}
-                        </div>
-                        <div class="day-toggle">
-                            <span style="color: #52B788; font-weight: 600; margin-right: 8px;" id="bulkToggleText_${day.key}">
-                                Inactivo
-                            </span>
-                            <div class="toggle-switch"
-                                 onclick="toggleBulkDay('${day.key}')"
-                                 data-day="${day.key}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="time-inputs" data-day="${day.key}" style="opacity: 0.5;">
-                        <div class="time-group">
-                            <label class="time-label">🕐 Hora Inicio</label>
-                            <input type="time" class="time-input"
-                                   data-field="start"
-                                   data-day="${day.key}"
-                                   disabled>
-                        </div>
-                        <div class="time-group">
-                            <label class="time-label">🕐 Hora Fin</label>
-                            <input type="time" class="time-input"
-                                   data-field="end"
-                                   data-day="${day.key}"
-                                   disabled>
-                        </div>
-                        <div class="time-group">
-                            <label class="time-label">☕ Inicio Descanso</label>
-                            <input type="time" class="time-input"
-                                   data-field="break_start"
-                                   data-day="${day.key}"
-                                   disabled>
-                        </div>
-                        <div class="time-group">
-                            <label class="time-label">☕ Fin Descanso</label>
-                            <input type="time" class="time-input"
-                                   data-field="break_end"
-                                   data-day="${day.key}"
-                                   disabled>
-                        </div>
+                    <div class="role-badge ${staff.user_role}" style="font-size: 0.7rem; padding: 2px 8px;">
+                        ${getRoleIcon(staff.user_role)} ${getRoleLabel(staff.user_role)}
                     </div>
                 </div>
             `).join('');
-        }
+    }
 
-        function setupBulkScheduleEvents() {
-            // Agregar estilos para los botones de plantilla
-            const style = document.createElement('style');
-            style.textContent = `
-                .template-btn {
-                    padding: 15px;
-                    border: 2px solid #D8F3DC;
-                    border-radius: 12px;
-                    background: white;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    text-align: center;
-                    color: #2D6A4F;
+    function generateBulkScheduleEditor() {
+        return DAYS_OF_WEEK.map(day => `
+            <div class="day-schedule" data-day="${day.key}" style="margin-bottom: 15px;">
+                <div class="day-header">
+                    <div class="day-name" style="display: flex; align-items: center; gap: 10px;">
+                        📅 ${day.label}
+                    </div>
+                    <div class="day-toggle">
+                        <span style="color: #52B788; font-weight: 600; margin-right: 8px;" id="bulkToggleText_${day.key}">
+                            Inactivo
+                        </span>
+                        <div class="toggle-switch"
+                             onclick="toggleBulkDay('${day.key}')"
+                             data-day="${day.key}">
+                        </div>
+                    </div>
+                </div>
+                <div class="time-inputs" data-day="${day.key}" style="opacity: 0.5;">
+                    <div class="time-group">
+                        <label class="time-label">🕐 Hora Inicio</label>
+                        <input type="time" class="time-input"
+                               data-field="start"
+                               data-day="${day.key}"
+                               disabled>
+                    </div>
+                    <div class="time-group">
+                        <label class="time-label">🕐 Hora Fin</label>
+                        <input type="time" class="time-input"
+                               data-field="end"
+                               data-day="${day.key}"
+                               disabled>
+                    </div>
+                    <div class="time-group">
+                        <label class="time-label">☕ Inicio Descanso</label>
+                        <input type="time" class="time-input"
+                               data-field="break_start"
+                               data-day="${day.key}"
+                               disabled>
+                    </div>
+                    <div class="time-group">
+                        <label class="time-label">☕ Fin Descanso</label>
+                        <input type="time" class="time-input"
+                               data-field="break_end"
+                               data-day="${day.key}"
+                               disabled>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function setupBulkScheduleEvents() {
+        // Agregar estilos para los botones de plantilla
+        const style = document.createElement('style');
+        style.textContent = `
+            .template-btn {
+                padding: 15px;
+                border: 2px solid #D8F3DC;
+                border-radius: 12px;
+                background: white;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: center;
+                color: #2D6A4F;
+            }
+            .template-btn:hover {
+                border-color: #52B788;
+                background: #D8F3DC;
+                transform: translateY(-2px);
+            }
+            .template-btn.active {
+                border-color: #52B788;
+                background: linear-gradient(135deg, #52B788, #38A3A5);
+                color: white;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function toggleAllStaff() {
+        const selectAll = document.getElementById('selectAllStaff');
+        const checkboxes = document.querySelectorAll('.staff-checkbox');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+
+    function toggleBulkDay(dayKey) {
+        const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${dayKey}"]`);
+        const timeInputs = document.querySelector(`#bulkScheduleModal .time-inputs[data-day="${dayKey}"]`);
+        const inputs = timeInputs.querySelectorAll('.time-input');
+        const toggleText = document.getElementById(`bulkToggleText_${dayKey}`);
+
+        // Cambiar estado
+        const isActive = toggle.classList.contains('active');
+        const newState = !isActive;
+
+        // Actualizar UI
+        toggle.classList.toggle('active', newState);
+        timeInputs.style.opacity = newState ? '1' : '0.5';
+        toggleText.textContent = newState ? 'Activo' : 'Inactivo';
+
+        // Habilitar/deshabilitar inputs
+        inputs.forEach(input => {
+            input.disabled = !newState;
+            if (newState && !input.value) {
+                // Establecer valores por defecto
+                const defaults = {
+                    start: '08:00',
+                    end: '17:00',
+                    break_start: '12:00',
+                    break_end: '13:00'
+                };
+                if (defaults[input.dataset.field]) {
+                    input.value = defaults[input.dataset.field];
                 }
-                .template-btn:hover {
-                    border-color: #52B788;
-                    background: #D8F3DC;
-                    transform: translateY(-2px);
-                }
-                .template-btn.active {
-                    border-color: #52B788;
-                    background: linear-gradient(135deg, #52B788, #38A3A5);
-                    color: white;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+            }
+        });
+    }
 
-        function toggleAllStaff() {
-            const selectAll = document.getElementById('selectAllStaff');
-            const checkboxes = document.querySelectorAll('.staff-checkbox');
+    function applyTemplate(templateType) {
+        // Limpiar selección previa
+        document.querySelectorAll('.template-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-template="${templateType}"]`).classList.add('active');
 
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-            });
-        }
+        const templates = {
+            standard: {
+                monday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                tuesday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                wednesday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                thursday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                friday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                saturday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
+            },
+            extended: {
+                monday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
+                tuesday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
+                wednesday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
+                thursday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
+                friday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
+                saturday: { start: '08:00', end: '13:00', break_start: '', break_end: '', active: true },
+                sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
+            },
+            weekend: {
+                monday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                tuesday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                wednesday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                thursday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                friday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                saturday: { start: '09:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
+                sunday: { start: '09:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true }
+            },
+            parttime: {
+                monday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                tuesday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                wednesday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                thursday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                friday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
+                saturday: { start: '', end: '', break_start: '', break_end: '', active: false },
+                sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
+            }
+        };
 
-        function toggleBulkDay(dayKey) {
-            const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${dayKey}"]`);
-            const timeInputs = document.querySelector(`#bulkScheduleModal .time-inputs[data-day="${dayKey}"]`);
+        const template = templates[templateType];
+        if (!template) return;
+
+        // Aplicar plantilla al editor
+        DAYS_OF_WEEK.forEach(day => {
+            const dayData = template[day.key];
+            const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${day.key}"]`);
+            const timeInputs = document.querySelector(`#bulkScheduleModal .time-inputs[data-day="${day.key}"]`);
             const inputs = timeInputs.querySelectorAll('.time-input');
-            const toggleText = document.getElementById(`bulkToggleText_${dayKey}`);
+            const toggleText = document.getElementById(`bulkToggleText_${day.key}`);
 
-            // Cambiar estado
-            const isActive = toggle.classList.contains('active');
-            const newState = !isActive;
+            // Actualizar toggle
+            toggle.classList.toggle('active', dayData.active);
+            timeInputs.style.opacity = dayData.active ? '1' : '0.5';
+            toggleText.textContent = dayData.active ? 'Activo' : 'Inactivo';
 
-            // Actualizar UI
-            toggle.classList.toggle('active', newState);
-            timeInputs.style.opacity = newState ? '1' : '0.5';
-            toggleText.textContent = newState ? 'Activo' : 'Inactivo';
-
-            // Habilitar/deshabilitar inputs
+            // Actualizar inputs
             inputs.forEach(input => {
-                input.disabled = !newState;
-                if (newState && !input.value) {
-                    // Establecer valores por defecto
-                    const defaults = {
-                        start: '08:00',
-                        end: '17:00',
-                        break_start: '12:00',
-                        break_end: '13:00'
-                    };
-                    if (defaults[input.dataset.field]) {
-                        input.value = defaults[input.dataset.field];
-                    }
-                }
+                input.disabled = !dayData.active;
+                input.value = dayData[input.dataset.field] || '';
             });
+        });
+
+        showMessage(`Plantilla "${templateType}" aplicada`, 'success');
+    }
+
+    async function applyBulkSchedule() {
+        const selectedStaff = Array.from(document.querySelectorAll('.staff-checkbox:checked')).map(cb => cb.value);
+
+        if (selectedStaff.length === 0) {
+            showMessage('Selecciona al menos un miembro del personal', 'error');
+            return;
         }
 
-        function applyTemplate(templateType) {
-            // Limpiar selección previa
-            document.querySelectorAll('.template-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-template="${templateType}"]`).classList.add('active');
+        // Recopilar datos del horario
+        const scheduleData = {};
+        DAYS_OF_WEEK.forEach(day => {
+            const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${day.key}"]`);
+            const isActive = toggle.classList.contains('active');
+            const inputs = document.querySelectorAll(`#bulkScheduleModal .time-inputs[data-day="${day.key}"] .time-input`);
 
-            const templates = {
-                standard: {
-                    monday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    tuesday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    wednesday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    thursday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    friday: { start: '08:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    saturday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
-                },
-                extended: {
-                    monday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
-                    tuesday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
-                    wednesday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
-                    thursday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
-                    friday: { start: '07:30', end: '18:00', break_start: '12:00', break_end: '13:00', active: true },
-                    saturday: { start: '08:00', end: '13:00', break_start: '', break_end: '', active: true },
-                    sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
-                },
-                weekend: {
-                    monday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    tuesday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    wednesday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    thursday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    friday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    saturday: { start: '09:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true },
-                    sunday: { start: '09:00', end: '17:00', break_start: '12:00', break_end: '13:00', active: true }
-                },
-                parttime: {
-                    monday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    tuesday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    wednesday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    thursday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    friday: { start: '08:00', end: '12:00', break_start: '', break_end: '', active: true },
-                    saturday: { start: '', end: '', break_start: '', break_end: '', active: false },
-                    sunday: { start: '', end: '', break_start: '', break_end: '', active: false }
-                }
-            };
-
-            const template = templates[templateType];
-            if (!template) return;
-
-            // Aplicar plantilla al editor
-            DAYS_OF_WEEK.forEach(day => {
-                const dayData = template[day.key];
-                const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${day.key}"]`);
-                const timeInputs = document.querySelector(`#bulkScheduleModal .time-inputs[data-day="${day.key}"]`);
-                const inputs = timeInputs.querySelectorAll('.time-input');
-                const toggleText = document.getElementById(`bulkToggleText_${day.key}`);
-
-                // Actualizar toggle
-                toggle.classList.toggle('active', dayData.active);
-                timeInputs.style.opacity = dayData.active ? '1' : '0.5';
-                toggleText.textContent = dayData.active ? 'Activo' : 'Inactivo';
-
-                // Actualizar inputs
-                inputs.forEach(input => {
-                    input.disabled = !dayData.active;
-                    input.value = dayData[input.dataset.field] || '';
-                });
+            const dayData = { active: isActive };
+            inputs.forEach(input => {
+                dayData[input.dataset.field] = input.value;
             });
 
-            showMessage(`Plantilla "${templateType}" aplicada`, 'success');
+            scheduleData[day.key] = dayData;
+        });
+
+        // Validar horario
+        if (!validateScheduleData(scheduleData)) {
+            return;
         }
 
-        async function applyBulkSchedule() {
-            const selectedStaff = Array.from(document.querySelectorAll('.staff-checkbox:checked')).map(cb => cb.value);
+        const saveBtn = document.getElementById('bulkSaveBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span>⏳</span><span>Aplicando Horarios...</span>';
 
-            if (selectedStaff.length === 0) {
-                showMessage('Selecciona al menos un miembro del personal', 'error');
-                return;
-            }
+        try {
+            let successCount = 0;
+            let errorCount = 0;
 
-            // Recopilar datos del horario
-            const scheduleData = {};
-            DAYS_OF_WEEK.forEach(day => {
-                const toggle = document.querySelector(`#bulkScheduleModal .toggle-switch[data-day="${day.key}"]`);
-                const isActive = toggle.classList.contains('active');
-                const inputs = document.querySelectorAll(`#bulkScheduleModal .time-inputs[data-day="${day.key}"] .time-input`);
+            // Aplicar horario a cada usuario seleccionado
+            for (const userId of selectedStaff) {
+                try {
+                    const response = await fetch(`/api/admin/schedules/${userId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            weekly_schedule: scheduleData
+                        })
+                    });
 
-                const dayData = { active: isActive };
-                inputs.forEach(input => {
-                    dayData[input.dataset.field] = input.value;
-                });
-
-                scheduleData[day.key] = dayData;
-            });
-
-            // Validar horario
-            if (!validateScheduleData(scheduleData)) {
-                return;
-            }
-
-            const saveBtn = document.getElementById('bulkSaveBtn');
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span>⏳</span><span>Aplicando Horarios...</span>';
-
-            try {
-                let successCount = 0;
-                let errorCount = 0;
-
-                // Aplicar horario a cada usuario seleccionado
-                for (const userId of selectedStaff) {
-                    try {
-                        const response = await fetch(`/api/admin/schedules/${userId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                                weekly_schedule: scheduleData
-                            })
-                        });
-
-                        if (response.ok) {
-                            // Actualizar datos locales
-                            const staffIndex = allStaff.findIndex(s => s.user_id === userId);
-                            if (staffIndex !== -1) {
-                                allStaff[staffIndex].weekly_schedule = { ...scheduleData };
-                            }
-                            successCount++;
-                        } else {
-                            errorCount++;
+                    if (response.ok) {
+                        // Actualizar datos locales
+                        const staffIndex = allStaff.findIndex(s => s.user_id === userId);
+                        if (staffIndex !== -1) {
+                            allStaff[staffIndex].weekly_schedule = { ...scheduleData };
                         }
-                    } catch (error) {
-                        console.error(`Error aplicando horario a usuario ${userId}:`, error);
+                        successCount++;
+                    } else {
                         errorCount++;
                     }
+                } catch (error) {
+                    console.error(`Error aplicando horario a usuario ${userId}:`, error);
+                    errorCount++;
                 }
-
-                // Actualizar interfaz
-                filteredStaff = [...allStaff];
-                displayStaffData();
-                updateStatistics();
-
-                // Mostrar resultados
-                if (successCount > 0) {
-                    showMessage(`✅ Horario aplicado a ${successCount} miembros del personal${errorCount > 0 ? ` (${errorCount} errores)` : ''}`, 'success');
-                } else {
-                    showMessage('❌ No se pudo aplicar el horario a ningún usuario', 'error');
-                }
-
-                if (errorCount === 0) {
-                    closeBulkScheduleModal();
-                }
-
-            } catch (error) {
-                console.error('❌ Error en aplicación masiva:', error);
-                showMessage('Error al aplicar horarios masivos', 'error');
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<span>📋</span><span>Aplicar a Personal Seleccionado</span>';
-            }
-        }
-
-        function closeBulkScheduleModal() {
-            const modal = document.getElementById('bulkScheduleModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-
-        function showUserFilterModal() {
-            // Crear modal dinámicamente
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.id = 'filterExportModal';
-
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px;">
-                    <button class="modal-close" onclick="closeFilterExportModal()">✖</button>
-                    <div class="modal-header">
-                        <h2 class="modal-title">
-                            <span>📄</span>
-                            Exportar Horarios Filtrados
-                        </h2>
-                        <p class="modal-subtitle">Selecciona el personal para incluir en el reporte PDF</p>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Filtros Rápidos -->
-                        <div style="background: #D8F3DC; border-radius: 15px; padding: 20px; margin-bottom: 25px;">
-                            <h4 style="color: #2D6A4F; margin-bottom: 15px;">🔍 Filtros Rápidos</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                                <button onclick="selectByRole('all')" class="filter-quick-btn" data-filter="all">
-                                    👥 Todo el Personal
-                                </button>
-                                <button onclick="selectByRole('veterinarian')" class="filter-quick-btn" data-filter="veterinarian">
-                                    👨‍⚕️ Veterinarios
-                                </button>
-                                <button onclick="selectByRole('receptionist')" class="filter-quick-btn" data-filter="receptionist">
-                                    👩‍💼 Recepcionistas
-                                </button>
-                                <button onclick="selectByRole('auxiliary')" class="filter-quick-btn" data-filter="auxiliary">
-                                    👩‍🔬 Auxiliares
-                                </button>
-                                <button onclick="selectBySchedule('active')" class="filter-quick-btn" data-filter="active">
-                                    ✅ Con Horario
-                                </button>
-                                <button onclick="selectBySchedule('inactive')" class="filter-quick-btn" data-filter="inactive">
-                                    ❌ Sin Horario
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Selección Individual -->
-                        <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px;">
-                            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
-                                <h4 style="color: #2D6A4F; margin: 0;">👤 Selección Individual</h4>
-                                <button onclick="toggleAllExportSelection()" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    🔄 Alternar Todos
-                                </button>
-                            </div>
-                            <div style="max-height: 300px; overflow-y: auto; border: 1px solid #D8F3DC; border-radius: 10px; padding: 15px;">
-                                <div id="exportStaffList">
-                                    ${generateExportStaffList()}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Opciones de Exportación -->
-                        <div style="background: white; border: 2px solid #D8F3DC; border-radius: 15px; padding: 20px; margin-top: 20px;">
-                            <h4 style="color: #2D6A4F; margin-bottom: 15px;">⚙️ Opciones de Exportación</h4>
-                            <div style="display: grid; gap: 15px;">
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="includeStats" checked style="width: 16px; height: 16px;">
-                                    <span style="color: #2D6A4F; font-weight: 600;">Incluir estadísticas generales</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="includeContact" checked style="width: 16px; height: 16px;">
-                                    <span style="color: #2D6A4F; font-weight: 600;">Incluir información de contacto</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="groupByRole" checked style="width: 16px; height: 16px;">
-                                    <span style="color: #2D6A4F; font-weight: 600;">Agrupar por rol</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 10px;">
-                                    <input type="checkbox" id="includeBreaks" style="width: 16px; height: 16px;">
-                                    <span style="color: #2D6A4F; font-weight: 600;">Mostrar horarios de descanso detallados</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" onclick="closeFilterExportModal()" class="btn-cancel">
-                            Cancelar
-                        </button>
-                        <button type="button" onclick="exportSelectedSchedules()" class="btn-save" id="exportBtn">
-                            <span>📄</span>
-                            <span>Generar PDF</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-            setupFilterExportEvents();
-        }
-
-        function generateExportStaffList() {
-            return allStaff
-                .filter(staff => staff.user_role !== 'admin')
-                .map(staff => {
-                    const hasSchedule = Object.values(staff.weekly_schedule).some(day => day.active);
-                    return `
-                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; border: 1px solid #D8F3DC; margin-bottom: 8px; background: ${hasSchedule ? '#D8F3DC' : '#f8f9fa'};">
-                            <input type="checkbox"
-                                   id="export_${staff.user_id}"
-                                   value="${staff.user_id}"
-                                   class="export-checkbox"
-                                   style="width: 16px; height: 16px;"
-                                   ${hasSchedule ? 'checked' : ''}>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #2D6A4F;">${staff.user_name}</div>
-                                <div style="font-size: 0.85rem; color: #52B788;">
-                                    ${getRoleLabel(staff.user_role)} • ${calculateWeeklyHours(staff.weekly_schedule)}h/sem
-                                </div>
-                            </div>
-                            <div class="role-badge ${staff.user_role}" style="font-size: 0.7rem; padding: 2px 8px;">
-                                ${getRoleIcon(staff.user_role)}
-                            </div>
-                            <div style="font-size: 0.8rem; color: ${hasSchedule ? '#52B788' : '#6c757d'};">
-                                ${hasSchedule ? '✅' : '❌'}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-        }
-
-        function setupFilterExportEvents() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .filter-quick-btn {
-                    padding: 10px 15px;
-                    border: 2px solid #D8F3DC;
-                    border-radius: 10px;
-                    background: white;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                    color: #2D6A4F;
-                }
-                .filter-quick-btn:hover {
-                    border-color: #52B788;
-                    background: #D8F3DC;
-                }
-                .filter-quick-btn.active {
-                    border-color: #52B788;
-                    background: linear-gradient(135deg, #52B788, #38A3A5);
-                    color: white;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        function selectByRole(role) {
-            // Limpiar selección previa de botones
-            document.querySelectorAll('.filter-quick-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-filter="${role}"]`).classList.add('active');
-
-            const checkboxes = document.querySelectorAll('.export-checkbox');
-
-            checkboxes.forEach(checkbox => {
-                const userId = checkbox.value;
-                const staff = allStaff.find(s => s.user_id === userId);
-
-                if (staff) {
-                    const hasSchedule = Object.values(staff.weekly_schedule).some(day => day.active);
-
-                    if (scheduleType === 'active') {
-                        checkbox.checked = hasSchedule;
-                    } else if (scheduleType === 'inactive') {
-                        checkbox.checked = !hasSchedule;
-                    }
-                }
-            });
-        }
-
-        function toggleAllExportSelection() {
-            const checkboxes = document.querySelectorAll('.export-checkbox');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked;
-            });
-        }
-
-        function exportSelectedSchedules() {
-            const selectedUserIds = Array.from(document.querySelectorAll('.export-checkbox:checked')).map(cb => cb.value);
-
-            if (selectedUserIds.length === 0) {
-                showMessage('Selecciona al menos un miembro del personal para exportar', 'error');
-                return;
             }
 
-            // Obtener opciones de exportación
-            const options = {
-                includeStats: document.getElementById('includeStats').checked,
-                includeContact: document.getElementById('includeContact').checked,
-                groupByRole: document.getElementById('groupByRole').checked,
-                includeBreaks: document.getElementById('includeBreaks').checked
-            };
+            // Actualizar interfaz
+            filteredStaff = [...allStaff];
+            displayStaffData();
+            updateStatistics();
 
-            // Filtrar personal seleccionado
-            const selectedStaff = allStaff.filter(staff => selectedUserIds.includes(staff.user_id));
-
-            // Generar y abrir PDF
-            generateFilteredSchedulesPDF(selectedStaff, options);
-
-            // Cerrar modal
-            closeFilterExportModal();
-
-            showMessage(`📄 Generando PDF con ${selectedStaff.length} miembros del personal...`, 'success');
-        }
-
-        function generateFilteredSchedulesPDF(selectedStaff, options) {
-            const htmlContent = generateFilteredPDFContent(selectedStaff, options);
-
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-
-            printWindow.onload = function() {
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 500);
-            };
-        }
-
-        function generateFilteredPDFContent(selectedStaff, options) {
-            const currentDate = new Date().toLocaleString('es-CO');
-
-            // Agrupar por rol si está habilitado
-            let staffGroups = [];
-            if (options.groupByRole) {
-                const groupedByRole = {
-                    veterinarian: selectedStaff.filter(s => s.user_role === 'veterinarian'),
-                    receptionist: selectedStaff.filter(s => s.user_role === 'receptionist'),
-                    auxiliary: selectedStaff.filter(s => s.user_role === 'auxiliary')
-                };
-
-                Object.entries(groupedByRole).forEach(([role, staff]) => {
-                    if (staff.length > 0) {
-                        staffGroups.push({
-                            role: role,
-                            label: getRoleLabel(role),
-                            icon: getRoleIcon(role),
-                            staff: staff
-                        });
-                    }
-                });
+            // Mostrar resultados
+            if (successCount > 0) {
+                showMessage(`✅ Horario aplicado a ${successCount} miembros del personal${errorCount > 0 ? ` (${errorCount} errores)` : ''}`, 'success');
             } else {
-                staffGroups = [{
-                    role: 'all',
-                    label: 'Todo el Personal',
-                    icon: '👥',
-                    staff: selectedStaff
-                }];
+                showMessage('❌ No se pudo aplicar el horario a ningún usuario', 'error');
             }
 
-            // Calcular estadísticas si está habilitado
-            let statsSection = '';
-            if (options.includeStats) {
-                const totalStaff = selectedStaff.length;
-                const avgWeeklyHours = selectedStaff.reduce((sum, staff) =>
-                    sum + calculateWeeklyHours(staff.weekly_schedule), 0) / totalStaff;
-                const staffWithSchedule = selectedStaff.filter(staff =>
-                    Object.values(staff.weekly_schedule).some(day => day.active)).length;
-
-                const roleStats = {
-                    veterinarian: selectedStaff.filter(s => s.user_role === 'veterinarian').length,
-                    receptionist: selectedStaff.filter(s => s.user_role === 'receptionist').length,
-                    auxiliary: selectedStaff.filter(s => s.user_role === 'auxiliary').length
-                };
-
-                statsSection = `
-                    <div class="stats-section">
-                        <h3 style="color: #2D6A4F; text-align: center; margin-bottom: 20px;">📊 Estadísticas del Reporte</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                            <div class="stat-card">
-                                <div class="stat-value">${totalStaff}</div>
-                                <div class="stat-label">Personal Total</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${Math.round(avgWeeklyHours)}</div>
-                                <div class="stat-label">Horas Promedio/Semana</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${staffWithSchedule}</div>
-                                <div class="stat-label">Con Horario Activo</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${roleStats.veterinarian}</div>
-                                <div class="stat-label">Veterinarios</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${roleStats.receptionist}</div>
-                                <div class="stat-label">Recepcionistas</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${roleStats.auxiliary}</div>
-                                <div class="stat-label">Auxiliares</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            if (errorCount === 0) {
+                closeBulkScheduleModal();
             }
 
-            return `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <title>Reporte de Horarios Filtrado - Clínica Veterinaria</title>
-            <style>
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    margin: 0;
-                    padding: 20px;
-                    background: white;
-                    color: #2D6A4F;
-                    line-height: 1.4;
-                }
-
-                .header {
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #52B788;
-                    padding-bottom: 20px;
-                }
-
-                .header h1 {
-                    color: #2D6A4F;
-                    font-size: 2.5rem;
-                    margin-bottom: 10px;
-                }
-
-                .header h2 {
-                    color: #52B788;
-                    font-size: 1.5rem;
-                    margin-bottom: 5px;
-                }
-
-                .header p {
-                    color: #22577A;
-                    font-size: 1rem;
-                    margin: 5px 0;
-                }
-
-                .stats-section {
-                    margin: 30px 0;
-                    padding: 20px;
-                    background: #D8F3DC;
-                    border-radius: 15px;
-                }
-
-                .stat-card {
-                    text-align: center;
-                    padding: 15px;
-                    background: white;
-                    border-radius: 10px;
-                    border-left: 4px solid #52B788;
-                }
-
-                .stat-value {
-                    font-size: 2rem;
-                    font-weight: bold;
-                    color: #2D6A4F;
-                    margin-bottom: 5px;
-                }
-
-                .stat-label {
-                    color: #52B788;
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                }
-
-                .role-section {
-                    margin: 40px 0;
-                    break-inside: avoid;
-                }
-
-                .role-header {
-                    background: linear-gradient(135deg, #52B788, #38A3A5);
-                    color: white;
-                    padding: 15px 20px;
-                    border-radius: 15px 15px 0 0;
-                    font-size: 1.3rem;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .staff-schedule {
-                    margin-bottom: 30px;
-                    break-inside: avoid;
-                    border: 2px solid #D8F3DC;
-                    border-radius: 15px;
-                    overflow: hidden;
-                }
-
-                .staff-info {
-                    background: #D8F3DC;
-                    padding: 20px;
-                    display: grid;
-                    grid-template-columns: auto 1fr auto;
-                    gap: 15px;
-                    align-items: center;
-                }
-
-                .staff-avatar {
-                    width: 60px;
-                    height: 60px;
-                    background: linear-gradient(135deg, #52B788, #38A3A5);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 1.5rem;
-                }
-
-                .staff-details h3 {
-                    margin: 0 0 5px 0;
-                    color: #2D6A4F;
-                    font-size: 1.3rem;
-                }
-
-                .staff-details p {
-                    margin: 0;
-                    color: #52B788;
-                    font-size: 0.9rem;
-                }
-
-                .staff-summary {
-                    text-align: right;
-                }
-
-                .weekly-hours {
-                    font-size: 1.8rem;
-                    font-weight: bold;
-                    color: #2D6A4F;
-                    margin-bottom: 5px;
-                }
-
-                .weekly-label {
-                    font-size: 0.8rem;
-                    color: #52B788;
-                }
-
-                .schedule-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    background: white;
-                }
-
-                .schedule-table th {
-                    background: #52B788;
-                    color: white;
-                    padding: 12px 8px;
-                    text-align: left;
-                    font-weight: 600;
-                    border: 1px solid #38A3A5;
-                }
-
-                .schedule-table td {
-                    padding: 10px 8px;
-                    border: 1px solid #D8F3DC;
-                    vertical-align: top;
-                }
-
-                .active-day {
-                    background: #D8F3DC;
-                }
-
-                .inactive-day {
-                    background: #f8f9fa;
-                    color: #6c757d;
-                }
-
-                .break-time {
-                    font-size: 0.85rem;
-                    color: #22577A;
-                    font-style: italic;
-                }
-
-                .page-break {
-                    page-break-before: always;
-                }
-
-                .no-schedule {
-                    text-align: center;
-                    padding: 40px 20px;
-                    color: #6c757d;
-                    font-style: italic;
-                    background: #f8f9fa;
-                }
-
-                @media print {
-                    body { margin: 0; font-size: 12px; }
-                    .header h1 { font-size: 2rem; }
-                    .header h2 { font-size: 1.2rem; }
-                    .schedule-table { font-size: 0.8rem; }
-                    .schedule-table th, .schedule-table td { padding: 6px 4px; }
-                    .staff-info { padding: 15px; }
-                }
-
-                @page {
-                    margin: 1cm;
-                    size: A4;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🐾 Clínica Veterinaria</h1>
-                <h2>Reporte de Horarios del Personal</h2>
-                <p><strong>Fecha de generación:</strong> ${currentDate}</p>
-                <p><strong>Personal incluido:</strong> ${selectedStaff.length} miembros</p>
-                ${options.groupByRole ? '<p><strong>Agrupado por:</strong> Rol del personal</p>' : ''}
-            </div>
-
-            ${statsSection}
-
-            ${staffGroups.map((group, groupIndex) => `
-                ${groupIndex > 0 ? '<div class="page-break"></div>' : ''}
-
-                <div class="role-section">
-                    ${options.groupByRole && group.role !== 'all' ? `
-                        <div class="role-header">
-                            <span>${group.icon}</span>
-                            <span>${group.label} (${group.staff.length})</span>
-                        </div>
-                    ` : ''}
-
-                    ${group.staff.map(staff => {
-                        const hasActiveSchedule = Object.values(staff.weekly_schedule).some(day => day.active);
-
-                        return `
-                            <div class="staff-schedule">
-                                <div class="staff-info">
-                                    <div class="staff-avatar">
-                                        ${(staff.user_name || 'U').charAt(0).toUpperCase()}
-                                    </div>
-                                    <div class="staff-details">
-                                        <h3>${staff.user_name}</h3>
-                                        <p><strong>Rol:</strong> ${getRoleLabel(staff.user_role)}</p>
-                                        ${options.includeContact ? `
-                                            <p><strong>Email:</strong> ${staff.user_email}</p>
-                                            ${staff.phone ? `<p><strong>Teléfono:</strong> ${staff.phone}</p>` : ''}
-                                        ` : ''}
-                                    </div>
-                                    <div class="staff-summary">
-                                        <div class="weekly-hours">${calculateWeeklyHours(staff.weekly_schedule)}h</div>
-                                        <div class="weekly-label">Horas/Semana</div>
-                                    </div>
-                                </div>
-
-                                ${hasActiveSchedule ? `
-                                    <table class="schedule-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Día</th>
-                                                <th>Estado</th>
-                                                <th>Horario</th>
-                                                ${options.includeBreaks ? '<th>Descanso</th>' : ''}
-                                                <th>Horas</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${DAYS_OF_WEEK.map(day => {
-                                                const dayData = staff.weekly_schedule[day.key];
-                                                const dayHours = calculateDayHours(dayData);
-
-                                                return `
-                                                    <tr class="${dayData.active ? 'active-day' : 'inactive-day'}">
-                                                        <td><strong>${day.label}</strong></td>
-                                                        <td>${dayData.active ? '✅ Activo' : '❌ Inactivo'}</td>
-                                                        <td>
-                                                            ${dayData.active && dayData.start && dayData.end ?
-                                                                `${dayData.start} - ${dayData.end}` : '-'}
-                                                        </td>
-                                                        ${options.includeBreaks ? `
-                                                            <td>
-                                                                ${dayData.active && dayData.break_start && dayData.break_end ?
-                                                                    `<span class="break-time">${dayData.break_start} - ${dayData.break_end}</span>` : '-'}
-                                                            </td>
-                                                        ` : ''}
-                                                        <td><strong>${dayData.active ? dayHours + 'h' : '-'}</strong></td>
-                                                    </tr>
-                                                `;
-                                            }).join('')}
-                                        </tbody>
-                                    </table>
-                                ` : `
-                                    <div class="no-schedule">
-                                        <h4>❌ Sin Horario Asignado</h4>
-                                        <p>Este miembro del personal no tiene un horario de trabajo configurado.</p>
-                                    </div>
-                                `}
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `).join('')}
-
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #D8F3DC; text-align: center; color: #22577A; font-size: 0.9rem;">
-                <p><strong>Clínica Veterinaria Universitaria Alexander Von Humboldt</strong></p>
-                <p>Sistema de Gestión de Horarios - Reporte generado automáticamente</p>
-                <p>Página generada el ${currentDate}</p>
-            </div>
-        </body>
-        </html>
-            `.trim();
+        } catch (error) {
+            console.error('❌ Error en aplicación masiva:', error);
+            showMessage('Error al aplicar horarios masivos', 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<span>📋</span><span>Aplicar a Personal Seleccionado</span>';
         }
+    }
 
-        function closeFilterExportModal() {
-            const modal = document.getElementById('filterExportModal');
-            if (modal) {
-                modal.remove();
-            }
+    function closeBulkScheduleModal() {
+        const modal = document.getElementById('bulkScheduleModal');
+        if (modal) {
+            modal.remove();
         }
+    }
 
     // =============== CERRAR MODALES AL HACER CLIC FUERA ===============
     document.addEventListener('click', function(e) {
